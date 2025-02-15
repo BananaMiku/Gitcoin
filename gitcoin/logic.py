@@ -33,6 +33,26 @@ class TnxInfo:
     
         return TnxInfo(pubkey, srcs, dests, int(fee), signature)
 
+    @staticmethod
+    def sign(privkey, pubkey, srcs, dests, fee):
+
+        # make signature here
+        signature = ""
+
+        return TnxInfo(pubkey, srcs, dests, fee, signature)
+
+    def validate(self):
+
+        # validate signature
+
+        return False
+
+
+    def __str__(self):
+        srcs_str = '\n'.join(self.srcs)
+        dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", self.dests.items()))
+        return f"{self.pubkey}\n\n{srcs_str}\n{dests_str}\n{self.mining_fee}\n{self.signature}"
+
 
 @dataclass
 class Tnx(TnxInfo):
@@ -80,7 +100,18 @@ class Tnx(TnxInfo):
 @dataclass
 class Block:
     hash: str
+    owner: str
+    worth: int = 0
     tnxs: list[Tnx] = field(default_factory=list)
+
+    @staticmethod
+    def from_commit(commit):
+        match = re.match(r"(\d+) (\w+)\n\n\w+", commit.message)
+        if match is None:
+            return None
+
+        [worth, owner] = match.groups()
+        return Block(commit.hash, owner, worth)
 
 
 @dataclass
@@ -179,7 +210,7 @@ def init_chain(state: State):
         if last_block is None:
 
             if match_block(commit.message) is not None:
-                last_block = Block(commit.hash)
+                last_block = Block.from_commit(commit)
 
             else:
                 state.mempool.append(TnxInfo.from_str(commit.message))
@@ -190,14 +221,16 @@ def init_chain(state: State):
     
         # if we're a block, ignore
         if match_block(commit.message) is not None:
+            last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
             state.blocks[commit.hash] = last_block
-            last_block = Block(commit.hash)
+            last_block = Block.from_commit(commit)
 
         tnx_info = TnxInfo.from_str(commit.message)
         tnx = Tnx.from_info(commit.hash, commit.parents[0], tnx_info)
         state.tnxs[tnx.hash] = tnx
         last_block.tnxs.append(tnx)
 
+    last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
     state.blocks[last_block.hash] = last_block
 
 
@@ -237,14 +270,15 @@ def rebase_on_remotes(s: State) -> list[str]:
             
             if last_block is None:
                 if match_block(commit.message) is not None:
-                    last_block = Block(commit.hash)
+                    last_block = Block.from_commit(commit)
                 else:
                     rs.mempool.append(TnxInfo.from_str(commit.message))
                 continue
 
             if match_block(commit.message) is not None:
+                last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
                 rs.blocks[commit.hash] = last_block
-                last_block = Block(commit.hash)
+                last_block = Block.from_commit(commit)
             
             tnx_info = TnxInfo.from_str(commit.message)
             tnx = Tnx(commit.hash, commit.parents[0].hash, tnx_info)
@@ -252,6 +286,7 @@ def rebase_on_remotes(s: State) -> list[str]:
             rs.last_block.tnxs.append(tnx)
 
         if last_block is not None:
+            last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
             rs.blocks[last_block.hash] = last_block
 
 
@@ -261,14 +296,15 @@ def rebase_on_remotes(s: State) -> list[str]:
 
             if last_block is None:
                 if match_block(commit.message) is not None:
-                    last_block = Block(commit.hash)
+                    last_block = Block.from_commit(commit)
                 else:
                     rs2.mempool.append(TnxInfo.from_str(commit.message))
                 continue
 
             if match_block(commit.message) is not None:
+                last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
                 rs2.blocks[commit.hash] = last_block
-                last_block = Block(commit.hash)
+                last_block = Block.from_commit(commit)
             
             tnx_info = TnxInfo.from_str(commit.message)
             tnx = Tnx(commit.hash, commit.parents[0].hash, tnx_info)
@@ -308,10 +344,7 @@ def rebase_on_remotes(s: State) -> list[str]:
 
         
 def commit_transaction(s: State, tnx_i: TnxInfo):
-    srcs_str = '\n'.join(tnx_i.srcs)
-    dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", tnx_i.dests.items()))
-    commit_str = f"\"{tnx_i.pubkey}\n\n{srcs_str}\n{dests_str}\n{tnx_i.mining_fee}\n{tnx_i.signature}\""
-    s.repo.git.commit("--empty-commit", "-m", commit_str)
+    s.repo.git.commit("--empty-commit", "-m", f"\"{str(tnx_i)}\"")
     commit = next(s.repo.iter_commits())
     tnx = Tnx.from_info(commit.hash, commit.parent[0].hash, tnx_i)
     s.tnxs[tnx.hash] = tnx

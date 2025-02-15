@@ -112,11 +112,7 @@ class User:
         # Sign the transaction
         transaction.signature = transaction.sign(self, state.privkey)
 
-        # Update the mempool and the transaction mapping
-        state.mempool.append(transaction)
-        state.tnxs[transaction.hash] = transaction
-
-        return transaction.hash  # Or return the transaction object if preferred
+        return transaction # Or return the transaction object if preferred
 
 
 class Bank:
