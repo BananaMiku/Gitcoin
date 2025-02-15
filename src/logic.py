@@ -1,19 +1,35 @@
 from dataclasses import dataclass
 from git import Repo
+import re
 
 @dataclass
 class State:
-    tnx: Tnx
+    tnxs: dict[str, Tnx]
     repo: Repo
 
+@dataclass
 class Tnx:
-    def __init__(self, hash_, prev_hash_, id, dests_, amnts_, mine_fee):
-        self.hash = hash_
-        self.prev_hash = prev_hash_ 
-        self.id
-        self.dests = dests_ #dests 
-        self.amnts = amnts_ #amounts per dest 
-        self.mine_fee = mine_fee
+    # hash is the commit hash
+    hash: str
+
+    # prev_hash is the hash of the previous commit
+    prev_hash: str
+
+    # pubkey is the public key of the user sending the money
+    pubkey: str
+
+    # srcs is a list of sources for transactions
+    srcs: list[src]
+
+    # map from destination public key to amount to send
+    dests: dict[str, int]
+
+    # fee allocated to the miner
+    mining_fee: int
+
+    # signature
+    signature: str
+
 
 def validate_tnx(to_validate: Tnx, tnx_map):
     #tnx should exist
@@ -49,6 +65,7 @@ def validate_tnx(to_validate: Tnx, tnx_map):
             return False
     return True
 
+
 #validates block and updates tnx_map
 def validate_block(tnxs_in_block, tnx_map):
     for i, tnx in enumerate(tnxs_in_block):
@@ -62,20 +79,41 @@ def validate_block(tnxs_in_block, tnx_map):
 
     return True
 
-def init_tnx_map(state):
-    map = {}
-    for commit in state.repo.iter_commits():
-        tnx = gen_tnx_obj_from_commit(commit.message);
-        map[tnx.hash] = tnx 
-    
-    return map
 
-def gen_tnx_obj_from_commit(msg):
-    pass 
+def construct_tnxs(state: State):
+    """constructs the commit hash -> Tnx map from the repo"""
+
+    state.tnxs = {}
+    for commit in state.repo.iter_commits():
+        
+        assert len(commit.parents) == 1 # you can have multiple parents in a merge, we should never have a merge
+        
+        # if we're a block, ignore
+        if match_block(commit.message) is not None:
+            continue
+                
+        tnx_match = match_transaction(commit.message)
+        assert tnx_match is not None
+        assert len(tnx_match.groups()) == 5
+
+        [pubkey, srcs_raw, dests_raw, fee, signature] = tnx_match.groups()
+        srcs = srcs_raw.split("\n")
+        dests = {pubkey: int(amount) for [amount, pubkey] in map(lambda a: a.split(" "), dests_raw.split("\n"))}
+        
+        tnx = Tnx(commit.hash, commit.parents[0], pubkey, srcs, dests, int(fee), signature)
+        state.tnxs[tnx.hash] = tnx
+
+
+def match_block(s: str) -> re.Match:
+    return re.match("(\w+)\n\n(\w+)", s)
+
+def match_transaction(s: str) -> re.Match:
+    return re.match("(\w+)\n\n((?:\w+\n)+)((?:\d+ \w+\n)+)(\d)\n(\w+)", s)
 
 
 def update_tnx_map():
     pass
+
 
 def append_block(s: State, header: str):
     """appends a block with a given header"""
