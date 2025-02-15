@@ -64,8 +64,10 @@ def validate_block(tnxs_in_block, tnx_map):
 
 def init_tnx_map(state):
     map = {}
-    pass
-
+    for commit in state.repo.iter_commits():
+        pass
+    
+    return map
 def update_tnx_map():
     pass
 
