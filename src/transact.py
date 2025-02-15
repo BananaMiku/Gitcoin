@@ -56,56 +56,6 @@ class User:
                 total_balance -= tnx.mining_fee  # Account for any fees
 
         return total_balance
-    
-    # def make_transaction(self, state, dest_list, fee):
-    #     '''
-    #     state: form logic.py, State class
-    #     dest_list: list of tuples, each tuple is of the form (reciever, amount)
-    #     fee: cost for making transaction
-    #     '''
-    #     # Calculate the total amount to be sent
-    #     total_amount = sum(amount for _, amount in dest_list)
-
-    #     # Start with the transaction fee
-    #     total_spent = fee  
-    #     srcs = []  # Keep track of sources used in the transaction
-
-    #     # Validate that sufficient funds are available
-    #     for dest_pubkey, amount in dest_list:
-    #         if amount <= 0:
-    #             raise ValueError(f"Transaction amount cannot be negative for destination {dest_pubkey}.")
-    #         total_spent += amount
-        
-    #     # Gather sources and check their availability
-    #     sources_balance = self.get_balance(state)
-
-    #     for tnx_hash, tnx in state.tnxs.items():
-    #         if tnx.pubkey == self.pubkey:  # Only consider transactions related to the sender
-    #             srcs.extend(tnx.srcs)
-    #             total_spent -= tnx.dests.get(self.pubkey, 0)
-
-    #     # If the total amount (+ fee) exceeds the balance, raise an error
-    #     if total_spent > sources_balance:
-    #         raise ValueError("Insufficient funds for the transaction.")
-        
-    #     # Create a new transaction info object
-    #     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
-    #     tnx_info = TnxInfo(pubkey=self.pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
-
-    #     # Create the transaction itself
-    #     new_tnx_hash = 'some_hash_generation_logic'  # This should create a unique hash for the transaction
-    #     new_tnx_prev_hash = 'some_previous_hash_logic'  # Logic to get the last transaction hash or previous state
-
-    #     transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
-
-    #     # Sign the transaction
-    #     transaction.signature = transaction.sign(self.privkey)
-
-    #     # Update the mempool and the transaction mapping
-    #     state.mempool.append(transaction)
-    #     state.tnxs[transaction.hash] = transaction
-
-    #     return transaction.hash  # Or return the transaction object if preferred
 
     def make_transaction(self, state, dest_list, fee):
         '''
