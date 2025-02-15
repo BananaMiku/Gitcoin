@@ -1,10 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from git import Repo, Commit
 import re
 
 @dataclass
 class TnxInfo:
-
     # pubkey is the public key of the user sending the money
     pubkey: str
 
@@ -44,13 +43,28 @@ class Tnx(TnxInfo):
     def from_info(hash: str, prev_hash: str, info: TnxInfo):
         return Tnx(info.pubkey, info.srcs, info.dests, info.mining_fee, info.signature, hash, prev_hash)
 
+
+@dataclass
+class Block:
+    hash: str
+    tnxs: list[Tnx] = field(default_factory=list)
+
+
 @dataclass
 class State:
     tnxs: dict[str, Tnx]
     mempool: list[TnxInfo]
+    blocks: dict[str, Block]
     repo: Repo
     pubkey: str
     privkey: str
+
+    
+@dataclass
+class RemoteState:
+    tnxs: dict[str, Tnx]
+    mempool: list[TnxInfo]
+    blocks: dict[str, Block]
 
 
 def validate_tnx(to_validate: Tnx, s: State):
@@ -124,14 +138,15 @@ def init_chain(state: State):
 
     state.tnxs = {}
     state.mempool = []
+    state.blocks = {}
 
-    seen_block = False
+    last_block = None
     for commit in state.repo.iter_commits():
 
-        if not seen_block:
+        if last_block is None:
 
             if match_block(commit.message) is not None:
-                seen_block = True
+                last_block = Block(commit.hash)
 
             else:
                 state.mempool.append(TnxInfo.from_str(commit.message))
@@ -142,12 +157,15 @@ def init_chain(state: State):
     
         # if we're a block, ignore
         if match_block(commit.message) is not None:
-            continue
+            state.blocks[commit.hash] = last_block
+            last_block = Block(commit.hash)
 
         tnx_info = TnxInfo.from_str(commit.message)
         tnx = Tnx.from_info(commit.hash, commit.parents[0], tnx_info)
         state.tnxs[tnx.hash] = tnx
+        last_block.tnxs.append(tnx)
 
+    state.blocks[last_block.hash] = last_block
 
 
 def match_block(s: str) -> re.Match:
@@ -159,7 +177,7 @@ def match_transaction(s: str) -> re.Match:
 
 def append_block(s: State, header: str):
     """appends a block with a given header"""
-    s.repo.git.commit("--empty-commit", "-m", header)
+    s.repo.git.commit("--empty-commit", "-m", f"{header}\n\n{s.pubkey}")
     # TODO: validate the amount of zeros
     # TODO: make the amount of zeros required depend on how long it took to make the last block
 
@@ -172,13 +190,44 @@ def rebase_on_remotes(s: State) -> list[str]:
     if a longer, valid chain is found, reset to that chain and add
     all pending transactions not on that chain after
     """
+    block_set = set(map(lambda a: a.hash, s.blocks))
     for remote in s.repo.remotes:
         remote.fetch()
         blocks = 0
+        
+        rs = RemoteState()
+        last_block = None
+        recent_common_commit = None
         for commit in s.repo.iter_commits(f"{remote.name}/main"):
-            if match_block(commit.message):
-                if not validate_block():
-                    pass
+
+            if commit.hash in blocks_set or commit.hash in s.tnxs:
+                recent_common_commit = commit
+            
+            if last_block is None:
+                if match_block(commit.message) is not None:
+                    last_block = Block(commit.hash)
+                else:
+                    rs.mempool.append(TnxInfo.from_str(commit.message))
+                continue
+
+            if match_block(commit.message) is not None:
+                rs.blocks[commit.hash] = last_block
+                last_block = Block(commit.hash)
+            
+            tnx_info = TnxInfo.from_str(commit.message)
+            tnx = Tnx(commit.hash, commit.parents[0].hash, tnx_info)
+            rs.tnxs[commit.hash] = tnx
+            rs.last_block.tnxs.append(tnx)
+
+        if last_block is not None:
+            rs.blocks[last_block.hash] = last_block
 
 
+
+        rs2 = RemoteState()
+        # TODO: finish
+
+
+
+        
     
