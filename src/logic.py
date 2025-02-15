@@ -1,11 +1,19 @@
-class tnx:
+from dataclasses import dataclass
+from git import Repo
+
+@dataclass
+class State:
+    tnx: Tnx
+    repo: Repo
+
+class Tnx:
     def __init__(self, hash_, prev_hash_, dests_, amnts_):
         self.hash = hash_
         self.prev_hash = prev_hash_ 
         self.dests = dests_ #dests 
         self.amnts = amnts_ #amounts per dest 
 
-def validate_tnx(to_validate: tnx, tnx_map):
+def validate_tnx(to_validate: Tnx, tnx_map):
     #tnx should exist
     if tnx == NULL:
         return False
@@ -45,7 +53,7 @@ def validate_block():
     pass
 
 
-def get_transactions() -> tnx:
+def get_transactions() -> Tnx:
     """gets the transaction linked list"""
 
 
@@ -57,7 +65,7 @@ def get_remotes() -> list[str]:
     """gets all remotes as a list of strings"""
 
 
-def rebase_on_remotes(chain: tnx) -> list[str]:
+def rebase_on_remotes(chain: Tnx) -> list[str]:
     """
     updates the chain based on the remotes
     adds all valid pending transactions the other chains have
