@@ -11,4 +11,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["gitcoin"]
-ext-modules = [{ name = "gitcoin.mine_cpu", sources = [ "gitcoin/hashing_utils/mine_cpu.c", "gitcoin/hashing_utils/sha1.c" ], include-dirs = ["src/hashing_utils"], py-limited-api = true }]
+ext-modules = [{ name = "gitcoin.hashing_utils.mine_cpu", sources = [ "gitcoin/hashing_utils/mine_cpu.c", "gitcoin/hashing_utils/sha1.c" ], include-dirs = ["src/hashing_utils"], py-limited-api = true }]

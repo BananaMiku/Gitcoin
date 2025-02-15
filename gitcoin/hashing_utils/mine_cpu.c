@@ -32,21 +32,8 @@ void mine_single(nonce new_nonce, char *block, uint32_t length, unsigned char ha
     }
     char *header = block;
     char *data = block + 1 + strlen(header);
-    fprintf(stderr, "===header===\n%s\n", header);
-    fprintf(stderr, "===data===\n%s\n===sha1 hash===\n", data);
 
     SHA1(hash, block, length);
-
-    print_digest(hash);
-    fprintf(stderr, "\n");
-}
-
-static PyObject *mine(PyObject *self, PyObject *args)
-{
-    int x;
-    if (!PyArg_ParseTuple(args, "i", &x))
-        return NULL;
-    return PyLong_FromLong(x * 2);
 }
 
 int main() {
@@ -84,3 +71,42 @@ int main() {
     }
     printf("%s\n", data_block);
 }
+
+static PyObject *mine(PyObject *self, PyObject *args)
+{
+    Py_buffer block;
+    if (!PyArg_ParseTuple(args, "y*", &block))
+        return NULL;
+
+    unsigned char hash[20];
+    uint64_t i = 0;
+    while(hash[0] || hash[1] || hash[2]) {
+        nonce_iterable my_nonce;
+        my_nonce.l = i;
+        my_nonce.h = 0;
+        mine_single(*((nonce *)&my_nonce), block.buf, block.len, hash);
+        i++;
+    }
+
+    return PyBytes_FromStringAndSize(block.buf, block.len);
+}
+
+static PyMethodDef methods[] = {
+    {"mine", mine, METH_VARARGS, "mining"},
+    {NULL, NULL, 0, NULL} // Sentinel
+};
+
+static struct PyModuleDef module = {
+    PyModuleDef_HEAD_INIT,
+    "mine_cpu",
+    NULL,
+    -1,
+    methods
+};
+
+PyMODINIT_FUNC
+PyInit_mine_cpu(void)
+{
+    return PyModule_Create(&module);
+}
+
