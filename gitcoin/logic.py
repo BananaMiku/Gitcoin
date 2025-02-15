@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from git import Repo, Commit
 import re
-from ecdsa import SigningKey, SECP256k1 #pip install ecdsa
+from ecdsa import SigningKey, SECP256k1
 from ecdsa.util import string_to_number
 
 @dataclass

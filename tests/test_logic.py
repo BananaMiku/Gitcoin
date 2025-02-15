@@ -1,8 +1,8 @@
-import gitcoin.logic
+from gitcoin import logic
 
 def test_validate_tnx_simple():
     #makes a state
-    s = logic.State({}, [], None, None, None)
+    s = logic.State({}, [], None, None, None, None)
 
     #adds to the state
     #return Tnx(info.pubkey, info.srcs, info.dests, info.mining_fee, info.signature, hash, prev_hash)
