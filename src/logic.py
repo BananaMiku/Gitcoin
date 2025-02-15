@@ -1,19 +1,29 @@
 from dataclasses import dataclass
-from git import Repo
+from git import Repo, Commit
 import re
 
 @dataclass
 class State:
     tnxs: dict[str, Tnx]
+    mempool: list[PendingTnx]
     repo: Repo
+    pubkey: str
+    privkey: str
 
 @dataclass
-class Tnx:
+class Tnx(TnxInfo):
     # hash is the commit hash
     hash: str
 
     # prev_hash is the hash of the previous commit
     prev_hash: str
+
+    @staticmehtod
+    def from_info(hash: str, prev_hash: str, info: TnxInfo):
+        return Tnx(hash, prev_hash, info.pubkey, info.srcs, info.dests, info.mining_fee, info.signature)
+
+@dataclass
+class TnxInfo:
 
     # pubkey is the public key of the user sending the money
     pubkey: str
@@ -29,6 +39,18 @@ class Tnx:
 
     # signature
     signature: str
+
+    @staticmethod
+    def from_str(s: str):
+        tnx_match = match_transaction(s)
+        assert tnx_match is not None
+        assert len(tnx_match.groups()) == 5
+
+        [pubkey, srcs_raw, dests_raw, fee, signature] = tnx_match.groups()
+        srcs = srcs_raw.split("\n")
+        dests = {pubkey: int(amount) for [amount, pubkey] in map(lambda a: a.split(" "), dests_raw.split("\n"))}
+    
+        return TnxInfo(pubkey, srcs, dests, int(fee), signature)
 
 
 def validate_tnx(to_validate: Tnx, s: State):
@@ -91,37 +113,35 @@ def validate_block(added_tnxs, s):
     return True
 
 
-def construct_tnxs(state: State):
+def init_chain(state: State):
     """constructs the commit hash -> Tnx map from the repo"""
 
     state.tnxs = {}
+    state.mempool = []
+
     seen_block = False
     for commit in state.repo.iter_commits():
 
-        # we only care about everything after the most recent block
         if not seen_block:
+
             if match_block(commit.message) is not None:
                 seen_block = True
 
+            else:
+                state.mempool.append(TnxInfo.from_str(commit.message))
+
             continue
 
-        
         assert len(commit.parents) == 1 # you can have multiple parents in a merge, we should never have a merge
-        
+    
         # if we're a block, ignore
         if match_block(commit.message) is not None:
             continue
-                
-        tnx_match = match_transaction(commit.message)
-        assert tnx_match is not None
-        assert len(tnx_match.groups()) == 5
 
-        [pubkey, srcs_raw, dests_raw, fee, signature] = tnx_match.groups()
-        srcs = srcs_raw.split("\n")
-        dests = {pubkey: int(amount) for [amount, pubkey] in map(lambda a: a.split(" "), dests_raw.split("\n"))}
-        
-        tnx = Tnx(commit.hash, commit.parents[0], pubkey, srcs, dests, int(fee), signature)
+        tnx_info = TnxInfo.from_str(commit.message)
+        tnx = Tnx.from_info(commit.hash, commit.parents[0], tnx_info)
         state.tnxs[tnx.hash] = tnx
+
 
 
 def match_block(s: str) -> re.Match:
@@ -146,4 +166,12 @@ def rebase_on_remotes(s: State) -> list[str]:
     if a longer, valid chain is found, reset to that chain and add
     all pending transactions not on that chain after
     """
-    remotes = s.repo.remote()
+    for remote in s.repo.remotes:
+        remote.fetch()
+        blocks = 0
+        for commit in s.repo.iter_commits(f"{remote.name}/main"):
+            if match_block(commit.message):
+                if not validate_block():
+
+
+    
