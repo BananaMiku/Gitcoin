@@ -1,5 +1,5 @@
 [project]
-name = "Gitcoin"
+name = "gitcoin"
 version = "1.0"
 
 [project.scripts]
@@ -12,5 +12,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages=["gitcoin"]
 ext-modules = [
-  { name="gitcoin.mine_cpu", sources=["src/hashing_utils/mine_cpu.c"]}
+  {
+    name = "gitcoin.mine_cpu",
+    sources = [
+      "src/hashing_utils/mine_cpu.c",
+      "src/hashing_utils/sha1.c"
+    ],
+    include_dirs = ["src/hashing_utils"]
+  }
 ]
