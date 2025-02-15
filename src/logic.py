@@ -1,20 +1,26 @@
 class tnx:
-    def __init__(self, hash_, prev_hash_, dests_, amnts_, source_):
+    def __init__(self, hash_, prev_hash_, dests_, amnts_):
         self.hash = hash_
         self.prev_hash = prev_hash_ 
         self.dests = dests_ #dests 
         self.amnts = amnts_ #amounts per dest 
-        self.source = source #list of tnx hashes
 
 def validate_tnx(to_validate: tnx, tnx_set):
-    assert(tnx != NULL)
-    amt_to_spend
-    if source not in tnx_set:
-        #source should exist
-        return False;
+    if tnx == NULL:
+        return False
 
-        amt = 0 
-        for 
+    amnt_to_spend = 0
+    for amount in tnx.amnts:
+        amnt_to_spend += amount
+
+    if tnx.prev_hash not in tnx_set:
+        return False; #source should exist
+
+    source = tnx_set[tnx.prev_hash]
+    amnt_can_spend = 0
+    for amount in source.
+    #make sure nothing else is pointing to source 
+
 
 
 
