@@ -180,9 +180,6 @@ def validate_tnx(to_validate: Tnx, s: State):
     return True
 
 
-def check_sig(sig):
-    return True
-
 #validates block and updates tnx_map
 def validate_block(added_tnxs: [Tnx], s: State):
     for i, tnx in enumerate(added_tnx):
