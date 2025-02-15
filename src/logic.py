@@ -53,19 +53,11 @@ def validate_block():
     pass
 
 
-def get_transactions() -> Tnx:
-    """gets the transaction linked list"""
-
-
-def append_block(header: str):
+def append_block(state, header: str):
     """appends a block with a given header"""
 
 
-def get_remotes() -> list[str]:
-    """gets all remotes as a list of strings"""
-
-
-def rebase_on_remotes(chain: Tnx) -> list[str]:
+def rebase_on_remotes(state, chain: Tnx) -> list[str]:
     """
     updates the chain based on the remotes
     adds all valid pending transactions the other chains have
