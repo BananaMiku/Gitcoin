@@ -31,51 +31,62 @@ class Tnx:
     signature: str
 
 
-def validate_tnx(to_validate: Tnx, tnx_map):
+def validate_tnx(to_validate: Tnx, s: State):
     #tnx should exist
-    if tnx == NULL:
-        return False
-
-    if len(tnx.dests) != len(tnx.amnts):
+    if to_validate == NULL:
         return False
 
     #source should exist
-    if tnx.prev_hash not in tnx_map:
-        return False; 
+    for src in to_validate.srcs:
+        if src not in s.tnxs:
+            return False
 
     #amnts should be the same
-    amnt_to_spend = tnx.mine_fee 
-    for amount in tnx.amnts:
-        amnt_to_spend += amount
-
-    source = tnx_map[tnx.prev_hash]
-    try:
-        amnt_index = source.dests.index(id)
-        if sources.amnts[amnt_index] != amnt_to_spend:
-            return False 
-    except:
-        return False
-
-    if amnt_to_spend != amnt_can_spend:
-        return False
-
-    #no other tnx should point to source
-    for hash in tnx_map:
-        if tnx_map[hash].prev_hash == tnx.prev_hash:
+    amnt_to_spend = to_validate.mine_fee 
+    for dest in to_validate.dests:
+        if to_validate.dests[dest] < 0:
             return False
+
+        amnt_to_spend += to_validate.dests[dest]
+
+    
+    for src in to_validate.srcs:
+        src_tnx = s.tnxs[src]
+        if to_validate.pubkey not in src_tnx.dests:
+            return False 
+        amnt_to_spend -= src.dests[to_validate.pubkey]
+
+    if amnt_to_spend != 0:
+        return False
+
+
+    #no other tnx should point to the same
+    for hash in s.tnxs:
+        if s.tnxs[hash].pubkey != to_validate.pubkey:
+            continue
+
+        for src in s.tnx[hash].srcs:
+            if src in to_validate.srcs:
+                return False
+
+
+    #tnx is good
     return True
 
 
+def check_sig(sig):
+    return True
+
 #validates block and updates tnx_map
-def validate_block(tnxs_in_block, tnx_map):
-    for i, tnx in enumerate(tnxs_in_block):
-        if not validate_tnx(tnx, tnx_map):
+def validate_block(added_tnxs, s):
+    for i, tnx in enumerate(added_tnx):
+        if not validate_tnx(tnx, s):
             #clears everything we added
             for j in range(i):
-                del tnx_map[tnx.hash]
+                del s.tnxs[added_tnx[j].hash]
 
             return False
-        tnx_map[tnx.hash] = tnx
+        s.tnxs[tnx.hash] = tnx
 
     return True
 
@@ -118,10 +129,6 @@ def match_block(s: str) -> re.Match:
 
 def match_transaction(s: str) -> re.Match:
     return re.match("(\w+)\n\n((?:\w+\n)+)((?:\d+ \w+\n)+)(\d)\n(\w+)", s)
-
-
-def update_tnx_map():
-    pass
 
 
 def append_block(s: State, header: str):
