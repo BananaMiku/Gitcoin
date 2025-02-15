@@ -7,20 +7,21 @@ def mine():
     append_pitched(pitched)
 
     last_time = datetime.now()
-    found_block_hash = False
+    block_header = None
     chain = get_transactions()
 
-    while not found_block_hash:
+    while block_header is None:
 
         for _ in range(1000):
-            found_block_hash = try_find_block_hash()
-            if found_block_hash: break
+            block_header = try_find_block_hash()
+            if block_header is not None: break
 
         if (last_time - datetime.now()).total_seconds() > 10:
             last_time = datetime.now()
             thread = Thread(target=update_chain_thread, args=chain)
             thread.start()
-    
+
+    append_block(block_header)
 
 
 def update_chain_thread(chain):
