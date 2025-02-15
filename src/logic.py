@@ -54,11 +54,11 @@ def validate_block(tnxs_in_block, tnx_map):
 
     return True
 
-def append_block(state, header: str):
+def append_block(state: State, header: str):
     """appends a block with a given header"""
 
 
-def rebase_on_remotes(state, chain: Tnx) -> list[str]:
+def rebase_on_remotes(state: State) -> list[str]:
     """
     updates the chain based on the remotes
     adds all valid pending transactions the other chains have
