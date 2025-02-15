@@ -5,21 +5,34 @@ class tnx:
         self.dests = dests_ #dests 
         self.amnts = amnts_ #amounts per dest 
 
-def validate_tnx(to_validate: tnx, tnx_set):
+def validate_tnx(to_validate: tnx, tnx_map):
+    #tnx should exist
     if tnx == NULL:
         return False
 
+    #source should exist
+    if tnx.prev_hash not in tnx_map:
+        return False; 
+
+    #amnts should be the same
     amnt_to_spend = 0
     for amount in tnx.amnts:
         amnt_to_spend += amount
 
-    if tnx.prev_hash not in tnx_set:
-        return False; #source should exist
-
-    source = tnx_set[tnx.prev_hash]
+    source = tnx_map[tnx.prev_hash]
     amnt_can_spend = 0
-    for amount in source.
-    #make sure nothing else is pointing to source 
+    for amount in source.amnts:
+        amnt_can_spend += amount
+
+    if amnt_to_spend != amnt_can_spend:
+        return False
+
+    #no other tnx should point to source
+    for hash in tnx_map:
+        if tnx_map[hash].prev_hash == tnx.prev_hash:
+            return False
+    return True
+
 
 
 
