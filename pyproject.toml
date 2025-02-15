@@ -1,0 +1,16 @@
+[project]
+name = "Gitcoin"
+version = "1.0"
+
+[project.scripts]
+gitcoin = "gitcoin.run:run"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages=["gitcoin"]
+ext-modules = [
+  { name="gitcoin.mine_cpu", sources=["src/hashing_utils/mine_cpu.c"]}
+]
