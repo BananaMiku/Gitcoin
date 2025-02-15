@@ -1,6 +1,6 @@
 import argparse
 
-
+print("HORSE enabled")
 # only integer transactions are allowed
 def dest_and_amt(input):
     # try parsing argument for 'Pay' command
