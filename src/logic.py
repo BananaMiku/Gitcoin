@@ -54,11 +54,14 @@ def validate_block(tnxs_in_block, tnx_map):
 
     return True
 
-def append_block(state: State, header: str):
+def append_block(s: State, header: str):
     """appends a block with a given header"""
+    s.repo.git.commit("--empty-commit", "-m", header)
+    # TODO: validate the amount of zeros
+    # TODO: make the amount of zeros required depend on how long it took to make the last block
 
 
-def rebase_on_remotes(state: State) -> list[str]:
+def rebase_on_remotes(s: State) -> list[str]:
     """
     updates the chain based on the remotes
     adds all valid pending transactions the other chains have
@@ -66,4 +69,4 @@ def rebase_on_remotes(state: State) -> list[str]:
     if a longer, valid chain is found, reset to that chain and add
     all pending transactions not on that chain after
     """
-
+    remotes = s.repo.remote()
