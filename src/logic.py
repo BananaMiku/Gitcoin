@@ -84,7 +84,16 @@ def construct_tnxs(state: State):
     """constructs the commit hash -> Tnx map from the repo"""
 
     state.tnxs = {}
+    seen_block = False
     for commit in state.repo.iter_commits():
+
+        # we only care about everything after the most recent block
+        if not seen_block:
+            if match_block(commit.message) is not None:
+                seen_block = True
+
+            continue
+
         
         assert len(commit.parents) == 1 # you can have multiple parents in a merge, we should never have a merge
         
