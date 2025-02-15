@@ -100,7 +100,7 @@ def check_sig(sig):
     return True
 
 #validates block and updates tnx_map
-def validate_block(added_tnxs, s):
+def validate_block(added_tnxs: Tnxs[], s: State):
     for i, tnx in enumerate(added_tnx):
         if not validate_tnx(tnx, s):
             #clears everything we added
