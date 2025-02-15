@@ -33,6 +33,7 @@ class TnxInfo:
     
         return TnxInfo(pubkey, srcs, dests, int(fee), signature)
 
+
 @dataclass
 class Tnx(TnxInfo):
     # hash is the commit hash
@@ -209,7 +210,7 @@ def match_transaction(s: str) -> re.Match:
 
 def append_block(s: State, header: str):
     """appends a block with a given header"""
-    s.repo.git.commit("--empty-commit", "-m", f"{header}\n\n{s.pubkey}")
+    s.repo.git.commit("--empty-commit", "-m", f"\"{header}\n\n{s.pubkey}\"")
     # TODO: validate the amount of zeros
     # TODO: make the amount of zeros required depend on how long it took to make the last block
 
@@ -222,7 +223,6 @@ def rebase_on_remotes(s: State) -> list[str]:
     if a longer, valid chain is found, reset to that chain and add
     all pending transactions not on that chain after
     """
-    block_set = set(map(lambda a: a.hash, s.blocks))
     for remote in s.repo.remotes:
         remote.fetch()
         blocks = 0
@@ -257,9 +257,61 @@ def rebase_on_remotes(s: State) -> list[str]:
 
 
         rs2 = RemoteState()
-        # TODO: finish
+        for commit in s.repo.iter_commits(f"..{recent_common_commit}"):
 
+            if last_block is None:
+                if match_block(commit.message) is not None:
+                    last_block = Block(commit.hash)
+                else:
+                    rs2.mempool.append(TnxInfo.from_str(commit.message))
+                continue
 
+            if match_block(commit.message) is not None:
+                rs2.blocks[commit.hash] = last_block
+                last_block = Block(commit.hash)
+            
+            tnx_info = TnxInfo.from_str(commit.message)
+            tnx = Tnx(commit.hash, commit.parents[0].hash, tnx_info)
+            rs2.tnxs[commit.hash] = tnx
+            rs2.last_block.tnxs.append(tnx)
+
+        if last_block is not None:
+            rs2.blocks[last_block.hash] = last_block
+
+        # if we have more blocks, we have to reset on that chain
+        if len(rs.blocks) > len(rs2.blocks):
+            remote_latest_commit = next(s.repo.iter_commits(f"{remote.name}/main")).hash
+            s.repo.reset("--hard", remote_latest_commit.hash)
+
+            # remove everything in rs2 form s
+            for hash in rs2.tnxs.keys():
+                del s.tnxs[hash]
+            for hash in rs2.blocks.keys():
+                del s.blocks[hash]
+
+            # add everything in rs to s
+            for hash, tnx in rs.tnxs.items():
+                s.tnxs[hash] = tnx
+            for hash, block in rs.blocks.items():
+                s.blocks[hash] = tnx
+
+            # try to add anything else we can add
+            for tnx in rs2.tnxs.values():
+                if validate_tnx(tnx, s):
+                    commit_transaction(s, tnx)
+
+        # otherwise put everything we can into mempool
+        else:
+            for tnx in rs.tnxs.values():
+                if validate_tnx(tnx, s):
+                    commit_transaction(s, tnx)
 
         
-    
+def commit_transaction(s: State, tnx_i: TnxInfo):
+    srcs_str = '\n'.join(tnx_i.srcs)
+    dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", tnx_i.dests.items()))
+    commit_str = f"\"{tnx_i.pubkey}\n\n{srcs_str}\n{dests_str}\n{tnx_i.mining_fee}\n{tnx_i.signature}\""
+    s.repo.git.commit("--empty-commit", "-m", commit_str)
+    commit = next(s.repo.iter_commits())
+    tnx = Tnx.from_info(commit.hash, commit.parent[0].hash, tnx_i)
+    s.tnxs[tnx.hash] = tnx
