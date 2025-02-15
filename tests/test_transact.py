@@ -33,7 +33,7 @@ def test_transaction_already_used():
         assert False, f"didn't throw exception: {tnx}"
 
     except ValueError:
-        ...
+        pass
 
 
 
