@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title> Gitcoin </title>
+        <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+        <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <a-scene>
+        <a-asset-item id="gitcoin-model" src="./Gitcoin.glb"></a-asset-item>
+        <a-camera position="0 1 0" wasd-controls-enabled ="true" zoom ="1" wasd-controls="acceleration: 50"></a-camera>
+
+        <a-sky color="#ECECEC"></a-sky>
+
+        <!-- Lighting-->
+        <a-light type="ambient" color="#FFF" intensity="1"></a-light>
+        <a-light type="directional" color="#FFF" intensity="2" position="-1 2 4"></a-light>
+        <a-light type="directional" color="#FFF" intensity="2" position="1 -2 -4"></a-light>
+        
+        <!-- Model -->
+        <a-entity gltf-model="#gitcoin-model" scale="50 50 50" position="0 1 -5" rotation="90 0 0"
+        animation="property: rotation; to: 90 360 0; loop: true; dur: 10000; easing: linear"></a-entity>
+
+    </a-scene>
+</body>
+
+<html>
