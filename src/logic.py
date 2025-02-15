@@ -7,15 +7,20 @@ class State:
     repo: Repo
 
 class Tnx:
-    def __init__(self, hash_, prev_hash_, dests_, amnts_):
+    def __init__(self, hash_, prev_hash_, id, dests_, amnts_, mine_fee):
         self.hash = hash_
         self.prev_hash = prev_hash_ 
+        self.id
         self.dests = dests_ #dests 
         self.amnts = amnts_ #amounts per dest 
+        self.mine_fee = mine_fee
 
 def validate_tnx(to_validate: Tnx, tnx_map):
     #tnx should exist
     if tnx == NULL:
+        return False
+
+    if len(tnx.dests) != len(tnx.amnts):
         return False
 
     #source should exist
@@ -23,14 +28,17 @@ def validate_tnx(to_validate: Tnx, tnx_map):
         return False; 
 
     #amnts should be the same
-    amnt_to_spend = 0
+    amnt_to_spend = tnx.mine_fee 
     for amount in tnx.amnts:
         amnt_to_spend += amount
 
     source = tnx_map[tnx.prev_hash]
-    amnt_can_spend = 0
-    for amount in source.amnts:
-        amnt_can_spend += amount
+    try:
+        amnt_index = source.dests.index(id)
+        if sources.amnts[amnt_index] != amnt_to_spend:
+            return False 
+    except:
+        return False
 
     if amnt_to_spend != amnt_can_spend:
         return False
@@ -53,6 +61,13 @@ def validate_block(tnxs_in_block, tnx_map):
         tnx_map[tnx.hash] = tnx
 
     return True
+
+def init_tnx_map(state):
+    map = {}
+    pass
+
+def update_tnx_map():
+    pass
 
 def append_block(s: State, header: str):
     """appends a block with a given header"""
