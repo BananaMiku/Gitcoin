@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,52 +25,22 @@ typedef struct nonce_iterable {
 
 char *hex_chars = "0123456789abcdef";
 
-void mine_single(nonce new_nonce, char *block, uint32_t length, unsigned char hash[20]) {
-    char *nonce_location = block + length - 33;
+/**
+ * Mines a single nonce
+ */
+bool mine_single_fast(SHA1_CTX ctx, nonce nonce, char *nonce_string) {
+    char hash[20];
     for(int i = 0; i < 16; i++) {
-        nonce_location[30 - i * 2] = hex_chars[(new_nonce.data[i] & 0xf0) >> 4];
-        nonce_location[31 - i * 2] = hex_chars[new_nonce.data[i] & 0x0f];
+        nonce_string[30 - i * 2] = hex_chars[(nonce.data[i] & 0xf0) >> 4];
+        nonce_string[31 - i * 2] = hex_chars[nonce.data[i] & 0x0f];
     }
-    char *header = block;
-    char *data = block + 1 + strlen(header);
 
-    SHA1(hash, block, length);
-}
-
-int main() {
-    char my_string[1000];
-    for(int i = 0; i < 1000; i++) {
-        my_string[i] = 0;
+    for(int i = 0; i < 33; i++) {
+        SHA1Update(&ctx, (const unsigned char*)nonce_string + i, 1);
     }
-    char *head = my_string;
-    while((head[0] = fgetc(stdin)) != EOF) {
-        head++;
-    }
-    head[0] = 0;
-    
-    uint32_t length = strlen(my_string);
-    char *data_block = my_string + strlen(my_string) + 1;
-    length += strlen(data_block) + 1;
+    SHA1Final((unsigned char *)hash, &ctx);
 
-    unsigned char hash_out[20];
-    SHA1(hash_out, my_string, length);
-
-    print_digest(hash_out);
-
-    fprintf(stderr, "Mining with template: \n");
-    fprintf(stderr, "===header===\n%s\n", my_string);
-    fprintf(stderr, "===data===\n%s\n===data===\n", data_block);
-
-    unsigned char hash[20];
-    uint64_t i = 0;
-    while(hash[0] || hash[1]) {
-        nonce_iterable my_nonce;
-        my_nonce.l = i;
-        my_nonce.h = 0;
-        mine_single(*((nonce *)&my_nonce), my_string, length, hash);
-        i++;
-    }
-    printf("%s\n", data_block);
+    return hash[0] || hash[1] || hash[2] || (hash[3] & 0xf0);
 }
 
 static PyObject *mine(PyObject *self, PyObject *args)
@@ -78,15 +49,19 @@ static PyObject *mine(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "y*", &block))
         return NULL;
 
-    unsigned char hash[20];
-    uint64_t i = 0;
-    while(hash[0] || hash[1] || hash[2]) {
-        nonce_iterable my_nonce;
-        my_nonce.l = i;
+    uint64_t hash_value = 0;
+    
+    SHA1_CTX ctx;
+    SHA1Init(&ctx);
+    for (int i = 0; i < block.len - 33; i++)
+        SHA1Update(&ctx, (const unsigned char*)block.buf + i, 1);
+
+    nonce_iterable my_nonce;
+    do {
+        hash_value++;
+        my_nonce.l = hash_value;
         my_nonce.h = 0;
-        mine_single(*((nonce *)&my_nonce), block.buf, block.len, hash);
-        i++;
-    }
+    } while (mine_single_fast(ctx, *((nonce *)&my_nonce), block.buf + block.len - 33));
 
     return PyBytes_FromStringAndSize(block.buf, block.len);
 }
