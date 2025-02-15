@@ -40,7 +40,29 @@ def validate_tnx(to_validate: tnx, tnx_map):
 def gen_block():
     pass
 
+
 def validate_block():
     pass
 
+
+def get_transactions() -> tnx:
+    """gets the transaction linked list"""
+
+
+def append_block(header: str):
+    """appends a block with a given header"""
+
+
+def get_remotes() -> list[str]:
+    """gets all remotes as a list of strings"""
+
+
+def rebase_on_remotes(chain: tnx) -> list[str]:
+    """
+    updates the chain based on the remotes
+    adds all valid pending transactions the other chains have
+
+    if a longer, valid chain is found, reset to that chain and add
+    all pending transactions not on that chain after
+    """
 
