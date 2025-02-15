@@ -41,17 +41,18 @@ def validate_tnx(to_validate: Tnx, tnx_map):
             return False
     return True
 
+#validates block and updates tnx_map
+def validate_block(tnxs_in_block, tnx_map):
+    for i, tnx in enumerate(tnxs_in_block):
+        if not validate_tnx(tnx, tnx_map):
+            #clears everything we added
+            for j in range(i):
+                del tnx_map[tnx.hash]
 
+            return False
+        tnx_map[tnx.hash] = tnx
 
-
-
-def gen_block():
-    pass
-
-
-def validate_block():
-    pass
-
+    return True
 
 def append_block(state, header: str):
     """appends a block with a given header"""
