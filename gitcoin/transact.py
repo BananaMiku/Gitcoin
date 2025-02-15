@@ -22,28 +22,28 @@ class User:
         valid_input = f"{self.private_prime}{self.public_key}".encode()
         return hashlib.sha256(valid_input).hexdigest()
     
-    def make_transaction(self, sender, recipient, amount, private_key):
-        """Verifies a user and processes a transaction."""
-        # Hash the sender's private key and public key using SHA-256 for a secure hash
-        hash_input = f"{private_key}{sender.public_key}".encode()
-        hashed_key = hashlib.sha256(hash_input).hexdigest()
+    # def make_transaction(self, sender, recipient, amount, private_key):
+    #     """Verifies a user and processes a transaction."""
+    #     # Hash the sender's private key and public key using SHA-256 for a secure hash
+    #     hash_input = f"{private_key}{sender.public_key}".encode()
+    #     hashed_key = hashlib.sha256(hash_input).hexdigest()
 
-        # Verify this hashed_key against a stored hash
-        valid_private_key = sender.compute_valid_private_key()
+    #     # Verify this hashed_key against a stored hash
+    #     valid_private_key = sender.compute_valid_private_key()
 
-        if hashed_key == valid_private_key:
-            # Check if the sender has enough funds
-            if self.get_balance(sender) >= amount:
-                print(f"Transaction from {sender.user_id} to {recipient.user_id} for {amount} is valid.")
-                self.update_balance(sender, -amount)
-                self.update_balance(recipient, amount)
-                return True
-            else:
-                print("Sender does not have adequate funds")
-                return False
-        else:
-            print("Invalid private key. Transaction failed.")
-            return False
+    #     if hashed_key == valid_private_key:
+    #         # Check if the sender has enough funds
+    #         if self.get_balance(sender) >= amount:
+    #             print(f"Transaction from {sender.user_id} to {recipient.user_id} for {amount} is valid.")
+    #             self.update_balance(sender, -amount)
+    #             self.update_balance(recipient, amount)
+    #             return True
+    #         else:
+    #             print("Sender does not have adequate funds")
+    #             return False
+    #     else:
+    #         print("Invalid private key. Transaction failed.")
+    #         return False
         
     def get_balance(self, state: State) -> int:
         """Calculates available balance based on previous transactions in the state."""
@@ -70,6 +70,11 @@ class User:
         total_spent = fee  
         srcs = []  # Keep track of sources used in the transaction
 
+        # Gather all previously used sources
+        used_sources = set()
+        for tnx in state.tnxs.values():
+            used_sources.update(tnx.srcs)
+            
         # Validate that sufficient funds are available
         for dest_pubkey, amount in dest_list:
             if amount <= 0:
@@ -84,6 +89,11 @@ class User:
             if tnx.pubkey == self.pubkey:  # Only consider transactions related to the sender
                 srcs.extend(tnx.srcs)
                 total_spent -= tnx.dests.get(self.pubkey, 0)
+
+        # Check if any new sources appear again
+        for source in srcs:
+            if source in used_sources:
+                raise ValueError(f"Source {source} has already been used in another transaction.")
 
         # If the total amount (+ fee) exceeds the balance, raise an error
         if total_spent > sources_balance:
