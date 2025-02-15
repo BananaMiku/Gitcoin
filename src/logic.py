@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from git import Repo, Commit
 import re
+from ecdsa import SigningKey, SECP256k1 #pip install ecdsa
+from ecdsa.util import string_to_number
 
 @dataclass
 class TnxInfo:
@@ -42,6 +44,36 @@ class Tnx(TnxInfo):
     @staticmethod
     def from_info(hash: str, prev_hash: str, info: TnxInfo):
         return Tnx(info.pubkey, info.srcs, info.dests, info.mining_fee, info.signature, hash, prev_hash)
+    
+    def sign(self, privkey: str):
+        """Sign the transaction using the private key."""
+        
+        # Create a string to sign that includes relevant transaction details
+        data_to_sign = f"{self.pubkey}{self.srcs}{self.dests}{self.mining_fee}{self.prev_hash}".encode()
+
+        # Sign the data
+        signature = self._generate_signature(data_to_sign, privkey)
+
+        # Store the signature in hexadecimal format
+        self.signature = signature.hex()  # Store signature as a hex string
+        return self.signature  # Return the signature if needed
+    
+    def _generate_signature(self, data: bytes, privkey: str) -> bytes:
+        """
+        Generate a Schnorr signature for the given data using the provided private key.
+        
+        :param data: The data to sign as bytes.
+        :param privkey: The private key as a hexadecimal string.
+        :return: The Schnorr signature as bytes.
+        """
+        # Create a SigningKey object using the provided private key
+        privkey_bytes = bytes.fromhex(privkey)  # Convert the hex private key to bytes
+        signing_key = SigningKey.from_string(privkey_bytes, curve=SECP256k1)
+
+        # Generate the Schnorr signature
+        signature = signing_key.sign(data)
+
+        return signature  # Return the signature as bytes
 
 
 @dataclass

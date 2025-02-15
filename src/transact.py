@@ -150,7 +150,7 @@ class User:
         transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
 
         # Sign the transaction
-        transaction.signature = transaction.sign(self.privkey)
+        transaction.signature = transaction.sign(self, state.privkey)
 
         # Update the mempool and the transaction mapping
         state.mempool.append(transaction)
