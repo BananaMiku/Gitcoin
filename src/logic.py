@@ -10,6 +10,7 @@ class State:
     pubkey: str
     privkey: str
 
+
 @dataclass
 class Tnx(TnxInfo):
     # hash is the commit hash
@@ -52,10 +53,9 @@ class TnxInfo:
     
         return TnxInfo(pubkey, srcs, dests, int(fee), signature)
 
-
 def validate_tnx(to_validate: Tnx, s: State):
     #tnx should exist
-    if to_validate == NULL:
+    if not to_validate:
         return False
 
     #source should exist
@@ -100,7 +100,7 @@ def check_sig(sig):
     return True
 
 #validates block and updates tnx_map
-def validate_block(added_tnxs: Tnxs[], s: State):
+def validate_block(added_tnxs: [Tnxs], s: State):
     for i, tnx in enumerate(added_tnx):
         if not validate_tnx(tnx, s):
             #clears everything we added
