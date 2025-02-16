@@ -1,8 +1,16 @@
 from gitcoin.logic import State, Tnx, TnxInfo, validate_tnx, Block, init_chain
 from gitcoin.utils import pem_to_simple
 from unittest.mock import patch
-from git import Repo, Commit
+from git import Repo, Commit, Git
 from git.util import bin_to_hex
+
+import os
+
+import pytest
+
+CLIENT_TEST_DIR = "/home/maxwell/Repositories/git-test/test-client"
+TEST_REMOTE = "git@github.com:maxwell3025/test-repo.git"
+
 b2x=lambda b: bin_to_hex(b).decode("ascii")
 
 priv = pem_to_simple("""-----BEGIN PRIVATE KEY-----
@@ -30,6 +38,11 @@ SRkdTSGnw87XihysDQIDAQAB
 -----END PUBLIC KEY-----
 """)
 
+@pytest.fixture
+def git_repo():
+    os.system(f"rm -rf {CLIENT_TEST_DIR}")
+    os.system(f"mkdir {CLIENT_TEST_DIR}")
+    yield Repo.clone_from(TEST_REMOTE, CLIENT_TEST_DIR)
 
 def test_validate_tnx_simple():
     s = State({}, [], None, None, None, None)
@@ -63,16 +76,14 @@ def test_tnxinfo_serialize_deserialize():
     assert tnxi == tnix_str_tnxi
 
     
-def test_init_chain():
-
+def test_init_chain(git_repo):
     c1 = Commit("", b"00000000000000000000", message=str(TnxInfo("nothing", ["nothing"], {"pub1": 10}, 0, "sign")), parents=[])
     c2 = Commit("", b"00000000000000000001", message=str(Block("header", "pub1", 10, [b2x(b"00000000000000000000")])), parents=[c1])
     c3 = Commit("", b"00000000000000000002", message=str(TnxInfo("pub1", [b2x(b"00000000000000000000")], {"pub2": 10}, 0, "sign")), parents=[c2])
     c4 = Commit("", b"00000000000000000003", message=str(TnxInfo("pub1", [b2x(b"00000000000000000001")], {"pub3": 10}, 0, "sign")), parents=[c3])
     
-    with patch.object(Repo, "iter_commits", return_value=[c4, c3, c2, c1]): 
-        state = State({}, [], {}, Repo("."), None, None)
-        init_chain(state)
+    state = State({}, [], {}, git_repo, None, None)
+    init_chain(state)
 
     assert len(state.blocks) == 1
     assert len(state.tnxs) == 2
