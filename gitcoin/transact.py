@@ -21,29 +21,6 @@ class User:
         """Computes a valid hashed representation of the user's private key."""
         valid_input = f"{self.private_prime}{self.public_key}".encode()
         return hashlib.sha256(valid_input).hexdigest()
-    
-    # def make_transaction(self, sender, recipient, amount, private_key):
-    #     """Verifies a user and processes a transaction."""
-    #     # Hash the sender's private key and public key using SHA-256 for a secure hash
-    #     hash_input = f"{private_key}{sender.public_key}".encode()
-    #     hashed_key = hashlib.sha256(hash_input).hexdigest()
-
-    #     # Verify this hashed_key against a stored hash
-    #     valid_private_key = sender.compute_valid_private_key()
-
-    #     if hashed_key == valid_private_key:
-    #         # Check if the sender has enough funds
-    #         if self.get_balance(sender) >= amount:
-    #             print(f"Transaction from {sender.user_id} to {recipient.user_id} for {amount} is valid.")
-    #             self.update_balance(sender, -amount)
-    #             self.update_balance(recipient, amount)
-    #             return True
-    #         else:
-    #             print("Sender does not have adequate funds")
-    #             return False
-    #     else:
-    #         print("Invalid private key. Transaction failed.")
-    #         return False
         
     def get_balance(self, state: State) -> int:
         """Calculates available balance based on previous transactions in the state."""
