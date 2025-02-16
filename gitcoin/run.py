@@ -2,6 +2,7 @@ import argparse
 import subprocess
 import json
 import os
+import random
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives import serialization
 from gitcoin.animations.miku import task_and_animate
@@ -104,6 +105,7 @@ def run():
         if not state.repo_location:
             raise Exception("Please set the repo for your blockchain")
         
+        #task_and_animate(random.choice(["plane", "wheel"]), TODO REPLACE, (state,), None)
         payment_info = dest_and_amt_info(args.dest_and_amt)
         fee = 1
         if len(payment_info) % 2 != 0:
@@ -133,7 +135,7 @@ def run():
         if not state.repo_location:
             raise Exception("Please set the repo for your blockchain")
 
-        task_and_animate("mining", mine, (state,), None)
+        task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None)
 
     elif args.command == "observer":
         print("Observer placeholder")

@@ -13,7 +13,9 @@ ANIMATION_DIRS_AND_TIMES = {"mining" : [.5, True],
                             "slots" : [.2, True],
                             "plane" : [.2, True],
                             "dollar" : [.2, True],
-                            "wheel" : [.2, True]
+                            "wheel" : [.2, True],
+                            "logo" : [.2, True],
+                            "slots_suc" : [.2, True]
                             } 
 
 TEXTS = {"mining" : "text/miningmsg.txt",
@@ -21,6 +23,7 @@ TEXTS = {"mining" : "text/miningmsg.txt",
          "dollar" : "text/dollar.txt",
          "plane" : "text/plane.txt",
          "wheel" : "text/wheel.txt",
+         "logo" : "text/logo.txt",
          }
 
 
@@ -46,20 +49,29 @@ def task_and_animate(animation_name, func, func_args, suc_frame):
     if animation_name == "mining":
         ...
         #print suc frame 
+        write_frame("mining", "text/miningsuc.txt")
     if animation_name == "slots":
+<<<<<<< HEAD
         ...
         #print suc frame 
+=======
+        write_frame("slots_suc", "text/slotssuc.txt")
+>>>>>>> c8a16bf (finished animations)
 
 
 #like animate but with one frame
-def write_frame(source):
+def write_frame(name, text_src):
+    frames_src = os.listdir("gitcoin/animations/"+ name + "/") 
+    for i, frame_src in enumerate(frames_src):
+        frames_src[i] = "gitcoin/animations/" + name + "/" + frame_src
+    frames_src.sort()
+
+    frames = []
     text = []
     minus_line_space = 2
-    if name in TEXTS: 
-        text = get_text(TEXTS[name])
-        minus_line_space += len(text)
+    text = get_text(text_src)
+    minus_line_space += len(text)
 
-    frame = []
 
     screen_size = get_screen_size_char()
 
@@ -67,13 +79,15 @@ def write_frame(source):
     if screen_size.lines - minus_line_space < 0:
         return
 
-    imgs = read_photos(screen_size.lines - minus_line_space, screen_size.columns, frames_src)
-    frame.append(get_ascii_frame(img))
+    imgs = read_photos(screen_size.lines - minus_line_space, screen_size.columns, [frames_src[0]])
+    for img in imgs:
+        frames.append(get_ascii_frame(img))
 
-    for frame in frames:
-        for line in text: 
+    for line in text: 
+        for frame in frames:
             frame.append(line)
-    print_frame(frames[cur_frame], screen_size.columns)
+
+    print_frame(frames[0], screen_size.columns)
 
 
 def animate(name, st):
@@ -219,4 +233,8 @@ def clear_console():
         sys.stdout.write("\033c")
 
 if __name__ == '__main__': 
-    animate("mining")
+    st = Thread_State()
+    animate("mining", st)
+    #write_frame("logo", "text/logo.txt")
+    #write_frame("slots_suc", "text/slotssuc.txt")
+    #write_frame("mining", "text/miningsuc.txt")
