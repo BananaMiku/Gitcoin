@@ -50,9 +50,7 @@ def test_validate_tnx_simple():
 
 def test_tnxinfo_validate_signed():
     signed = TnxInfo.sign(priv, pub, ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
-    print(signed.signature)
     assert signed.validate()
-    assert False
 
 
 def test_tnxinfo_serialize_deserialize():
