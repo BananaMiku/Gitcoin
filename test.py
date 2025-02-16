@@ -1,6 +1,9 @@
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
+import os
+
+print("Random test:", os.urandom(16).hex())
 
 # -------------------------------
 # 1. Generate Keys and Sign a Message

@@ -1,6 +1,13 @@
 import argparse
 import subprocess
-from gitcoin.logic import make_keys
+import json
+import os
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives import serialization
+
+from gitcoin.logic import make_keys, State
+from gitcoin.utils import pem_to_simple, simple_to_pem
+
 
 # only integer transactions are allowed
 
@@ -27,6 +34,9 @@ def dest_and_amt_info(args):
 
 
 def run():
+    state = State()
+    load_state(state) # try to get stuff from state
+    
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", help="sub-command help")
 
@@ -64,7 +74,8 @@ def run():
     keypair_parser = subparsers.add_parser("keypair", help="generate or set keypairs")
     keypair_subparsers = keypair_parser.add_subparsers(dest="keypair_action", help="idk")
 
-    keypair_subparsers.add_parser("generate", help="generate private key")
+    keypair_subparsers.add_parser("gen", help="generate private key")
+    keypair_subparsers.add_parser("read", help="read private and public key")
     keypair_set_parser = keypair_subparsers.add_parser("set", help="set your private key")
     keypair_set_parser.add_argument("privkey", help="your private key", type=str)
 
@@ -78,24 +89,22 @@ def run():
         parser.print_help()
 
     if args.command == "pay":
-        print("pay")
+        if not state.privkey or not state.pubkey:
+            raise Exception("Please set your private key (or generate one) before trying to pay people")
+        
         payment_info = dest_and_amt_info(args.dest_and_amt)
+        fee = 1
         if len(payment_info) % 2 != 0:
             fee = payment_info.pop(-1)
-        else:
-            fee = 1
 
-        print(f"fee is {fee}")
         for i in range(0, len(payment_info), 2):
-            print(
-                f"Destination: {payment_info[i]}, Amount: {payment_info[i+1]}")
+            print( f"Destination: {payment_info[i]}, Amount: {payment_info[i+1]}")
 
     elif args.command == "remote":
         print('remote')
         if args.remote_action == "add":
             print(f"Adding remote: {args.name} with URL: {args.url}")
-            subprocess.Popen(
-                f'git remote add {args.name} {args.url}', shell=True)
+            subprocess.Popen(f'git remote add {args.name} {args.url}', shell=True)
         elif args.remote_action == "remove":
             print(f"Removing remote: {args.name}")
             subprocess.Popen(f'git remote rm {args.name}', shell=True)
@@ -110,11 +119,50 @@ def run():
 
     if args.command == "keypair":
         if args.keypair_action == "set":
-            print(f"setting private key {args.privkey}")
-        if args.keypair_action == "generate":
+            with open(args.privkey, "r") as f:
+                privkey_pem = f.read()
+
+            public_pem = load_pem_private_key(privkey_pem.encode(), None).public_key().public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+
+            print(f"setting private key as follows\n{privkey_pem}")
+            state.privkey = pem_to_simple(privkey_pem)
+            state.pubkey = pem_to_simple(pubkey_pem)
+            
+        if args.keypair_action == "gen":
+            if state.privkey and state.pubkey:
+                raise Exception("This would overwrite your public and private keys, you probably don't wanna do this")
+            
             [priv, pub] = make_keys()
-            print(f"keys:\{priv}\n{pub}\n\nthese are saved")
-    
+            print(f"keys:\n{priv}\n{pub}\n\nthese are saved")
+            state.privkey = pem_to_simple(priv)
+            state.pubkey = pem_to_simple(pub)
+            write_state(state)
+
+        if args.keypair_action == "read":
+            if not state.privkey or not state.pubkey:
+                raise Exception("No keys yet, generate some ??")
+            print(f"keys:\n{simple_to_pem(state.privkey, True)}\n{simple_to_pem(state.pubkey, False)}")
+
+
+def load_state(state: State):
+    try:
+        with open(f"{os.environ['HOME']}/.local/share/gitcoin_state.json", "r") as f:
+            s = json.load(f)
+            state.pubkey = s["pubkey"]
+            state.privkey = s["privkey"]
+    except:
+        pass
+
+
+def write_state(state: State):
+    with open(f"{os.environ['HOME']}/.local/share/gitcoin_state.json", "w") as f:
+        json.dump({
+            "pubkey": state.pubkey,
+            "privkey": state.privkey
+        }, f)
 
 
 if __name__ == "__main__":

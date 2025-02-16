@@ -1,7 +1,8 @@
 from gitcoin.logic import State, Tnx, TnxInfo
 from gitcoin.transact import make_transaction
+from gitcoin.utils import pem_to_simple
 
-priv = """-----BEGIN PRIVATE KEY-----
+priv = pem_to_simple("""-----BEGIN PRIVATE KEY-----
 MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBALhfts/SuoD6fv+p
 azNRZC0RJUE999QUWEFDfuJXZKx+e2k4hQ76pSuw5d9rkQXR43VSoSPGv9Yu7bE5
 8jPs2i/BJ6VVeW5pOvaLnjh8Iah+25uOID/2UEseij077KBYWy8GRoxmOZyh4zkW
@@ -16,13 +17,13 @@ yU3aPB/1Y+I4JzRWXYFgHgCQsi9lAQJBAINOJO+71OxBOa2z8pxAbtqP6i6zMxMi
 wp/RdQA2Qc//UZpUS2jOZc33+OIXGPRInq/vNApYqegFbDp0fMr/LYECQFOW09JB
 1ddTvlpU4zyV8S1dM8lIQseyXcu5RAzmrJmkuStwhmUqU8tlPBazGRm/eGH2eMSA
 a3Mb1kV9zd2d7Is=
------END PRIVATE KEY-----"""
-pub = """-----BEGIN PUBLIC KEY-----
+-----END PRIVATE KEY-----""")
+pub = pem_to_simple("""-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4X7bP0rqA+n7/qWszUWQtESVB
 PffUFFhBQ37iV2SsfntpOIUO+qUrsOXfa5EF0eN1UqEjxr/WLu2xOfIz7NovwSel
 VXluaTr2i544fCGoftubjiA/9lBLHoo9O+ygWFsvBkaMZjmcoeM5FoSRM5lfEkwN
 SRkdTSGnw87XihysDQIDAQAB
------END PUBLIC KEY-----"""
+-----END PUBLIC KEY-----""")
 
 
 

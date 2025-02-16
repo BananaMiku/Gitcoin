@@ -5,6 +5,8 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 import re
 
+from gitcoin.utils import simple_to_pem
+
 def make_keys():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -67,7 +69,8 @@ class TnxInfo:
         """Sign the transaction using the private key."""
         
         # Create a string to sign that includes relevant transaction details
-        signature = load_pem_private_key(privkey.encode(), None).sign(
+        print(simple_to_pem(privkey, True))
+        signature = load_pem_private_key(simple_to_pem(privkey, True).encode(), None).sign(
             _construct_message(pubkey, srcs, dests, fee),
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
@@ -81,7 +84,7 @@ class TnxInfo:
 
     def validate(self):
         try:
-            load_pem_public_key(self.pubkey.encode()).verify(
+            load_pem_public_key(simple_to_pem(self.pubkey, False).encode()).verify(
                 bytes.fromhex(self.signature),
                 _construct_message(self.pubkey, self.srcs, self.dests, self.mining_fee),
                 padding.PSS(
@@ -138,12 +141,12 @@ class Block:
 
 @dataclass
 class State:
-    tnxs: dict[str, Tnx]
-    mempool: list[TnxInfo]
-    blocks: dict[str, Block]
-    repo: Repo
-    pubkey: str
-    privkey: str
+    tnxs: dict[str, Tnx] = field(default_factory=dict)
+    mempool: list[TnxInfo] = field(default_factory=list)
+    blocks: dict[str, Block] = field(default_factory=dict)
+    repo: Repo = field(default_factory=lambda: Repo("."))
+    pubkey: str = ""
+    privkey: str = ""
 
     
 @dataclass
