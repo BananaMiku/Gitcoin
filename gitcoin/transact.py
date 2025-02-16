@@ -41,7 +41,6 @@ def init_transaction(state, dest_list: list[tuple[str, int]]):
 
 
 def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, init=False):
-    print(dest_list)
     '''
     pubkey: The public key of the user (string)
     privkey: The private key of the user (string)
@@ -100,7 +99,6 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, i
             if bad:
                 continue
 
-            print("adding block", block)
             srcs.append(hash)
             total_spent -= block.worth
 
@@ -109,10 +107,6 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, i
     # Create a new transaction info object
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
     if total_spent > 0:
-        print(srcs)
-        print(total_spent)
-        # print(srcs, dest_dict)
-        # print(state)
         raise ValueError(f"Total Spent should not be positive.")
     if total_spent < 0:
         dest_dict[state.pubkey] = -total_spent
