@@ -40,7 +40,7 @@ The possible options for Gitcoin is:
 | remote | retrieving Gitcoin blockchain |
 | mine   | mines Gitcoin |
 | observer | observes own blockchain |
-| keyapir | generates keypairs for user |
+| keypair | generates keypairs for user |
 | repo | retrieves repo location |
 
 ## Features
