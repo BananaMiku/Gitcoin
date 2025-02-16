@@ -44,7 +44,6 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
     fee: cost for making the transaction
     balance: Current balance of the user
     '''
-
     # Calculate the total amount to be sent
     total_amount = sum(amount for _, amount in dest_list)
 
@@ -65,7 +64,6 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
 
     # Calculate how much the given person has
     for hash, tnx in state.tnxs.items():
-        bad = True
         for tnx_ in tnx.dests:
             if tnx_[0] == state.pubkey:
                 bad = False
@@ -76,9 +74,9 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
                 if bad:
                     continue
 
-                srcs.append(tnx.hash)
+                srcs.append(hash)
                 total_spent -= tnx_[1]
-    
+
     for hash, block in state.blocks.items():
         if block.owner==state.pubkey:
             bad = False
@@ -95,6 +93,8 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
     if total_spent > 0:
         raise ValueError(f"Total Spent should not be positive.")
+    if total_spent < 0:
+        dest_dict[state.pubkey] = -total_spent
 
     return TnxInfo.sign(state.privkey, state.pubkey, srcs, dest_dict, fee)
 

@@ -68,7 +68,7 @@ def test_transaction_already_used():
 
 def test_transaction_excess():
     s = State({}, [], {}, None, pub, priv)
-    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
+    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [[pub, 10]], 0, None, "hash1", None)
 
     tnx: TnxInfo = make_transaction(s, [["pub2", 6]], 2)
     assert tnx.pubkey == pub
@@ -81,10 +81,10 @@ def test_transaction_excess():
     
 def test_transaction_nightmare():
     s = State({}, [], {}, None, pub, priv)
-    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
-    s.tnxs["hash2"] = Tnx(pub, ["hash1"], ["pub2", 10], 0, None, "hash2", None)
+    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [[pub, 10]], 0, None, "hash1", None)
+    s.tnxs["hash2"] = Tnx(pub, ["hash1"], [["pub2", 10]], 0, None, "hash2", None)
     s.blocks["hash3"] = Block("hash1", pub, 10)
-    s.tnxs["hash5"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
+    s.tnxs["hash5"] = Tnx("nothing", ["nothing"], [[pub, 10]], 0, None, "hash5", None)
 
     tnx: TnxInfo = make_transaction(s, [["pub2", 15]], 0)
     assert tnx.pubkey == pub
