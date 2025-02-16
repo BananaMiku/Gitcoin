@@ -31,7 +31,7 @@ def make_keys():
 
 
 def _construct_message(pubkey, srcs, dests, fee):
-    srcs_str = '\n'.join(srcs)
+    srcs_str = '\n'.join(map(lambda a: a.strip(), srcs))
     dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", dests.items()))
     return f"{pubkey}\n\n{srcs_str}\n{dests_str}\n{fee}".encode()
 
@@ -59,7 +59,7 @@ class TnxInfo:
             return None
 
         [pubkey, srcs_raw, dests_raw, fee, signature] = tnx_match.groups()
-        srcs = srcs_raw.split("\n")
+        srcs = srcs_raw.strip().split("\n")
         dests = {pubkey: int(amount) for [amount, pubkey] in map(lambda a: a.split(" "), dests_raw.split("\n"))}
     
         return TnxInfo(pubkey, srcs, dests, int(fee), signature)
@@ -100,7 +100,7 @@ class TnxInfo:
         
 
     def __str__(self):
-        srcs_str = '\n'.join(self.srcs)
+        srcs_str = '\n'.join(map(lambda a: a.strip(), self.srcs))
         dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", self.dests.items()))
         return f"{self.pubkey}\n\n{srcs_str}\n{dests_str}\n{self.mining_fee}\n{self.signature}"
 
@@ -151,32 +151,28 @@ class State:
     
 @dataclass
 class RemoteState:
-    tnxs: dict[str, Tnx]
-    mempool: list[TnxInfo]
-    blocks: dict[str, Block]
+    tnxs: dict[str, Tnx] = field(default_factory=dict)
+    mempool: list[TnxInfo] = field(default_factory=list)
+    blocks: dict[str, Block] = field(default_factory=dict)
 
 
 def validate_tnx(to_validate: TnxInfo, s: State):
     #tnx should exist
     if not to_validate:
-        print("need valid tnx obj")
         return False
 
     #source should exist
     for src in to_validate.srcs:
         if src not in s.tnxs:
-            print(f"source: {src} does no exist")
             return False
 
     #amnts should be the same
     amnt_to_spend = to_validate.mining_fee 
     for dest in to_validate.dests:
         if to_validate.dests[dest] < 0:
-            print("cant have neg amounts") 
             return False
 
         amnt_to_spend += to_validate.dests[dest]
-    print(f"{amnt_to_spend}")
 
     
     for src in to_validate.srcs:
@@ -186,7 +182,6 @@ def validate_tnx(to_validate: TnxInfo, s: State):
         amnt_to_spend -= src_tnx.dests[to_validate.pubkey]
 
     if amnt_to_spend != 0:
-        print("incorrect amnts")
         return False
 
 
@@ -195,9 +190,8 @@ def validate_tnx(to_validate: TnxInfo, s: State):
         if s.tnxs[hash].pubkey != to_validate.pubkey:
             continue
 
-        for src in s.tnx[hash].srcs:
+        for src in s.tnxs[hash].srcs:
             if src in to_validate.srcs:
-                print("cant source same tnx twice")
                 return False
 
 
@@ -316,11 +310,15 @@ def rebase_on_remotes(s: State):
             if (bloc := Block.from_commit(commit)) is not None:
                 rs.blocks[commit.hexsha] = last_block
                 last_block = bloc
+                continue
             
             tnx_info = TnxInfo.from_str(commit.message)
-            tnx = Tnx(commit.hexsha, commit.parents[0].hexsha, tnx_info)
+            if len(commit.parents):
+                tnx = Tnx.from_info(commit.hexsha, commit.parents[0].hexsha, tnx_info)
+            else:
+                tnx = Tnx.from_info(commit.hexsha, None, tnx_info)
             rs.tnxs[commit.hexsha] = tnx
-            rs.last_block.tnxs.append(tnx)
+            last_block.tnxs.append(tnx)
 
         if last_block is not None:
             rs.blocks[last_block.hash] = last_block
@@ -329,8 +327,10 @@ def rebase_on_remotes(s: State):
 
         tnx_hashes = []
         block_hashes = []
-        rs2 = RemoteState()
-        for commit in s.repo.iter_commits(f"..{recent_common_commit}"):
+        for commit in s.repo.iter_commits():
+            if commit.hexsha == recent_common_commit.hexsha:
+                break
+            
             if (bloc := Block.from_commit(commit)) is not None:
                 block_hashes.append(bloc.hash)
             else:
@@ -338,12 +338,15 @@ def rebase_on_remotes(s: State):
 
         # if we have more blocks, we have to reset on that chain
         if len(rs.blocks) > len(block_hashes):
-            remote_latest_commit = next(s.repo.iter_commits(f"{remote.name}/main")).hash
-            s.repo.reset("--hard", remote_latest_commit.hexsha)
+            remote_latest_commit = next(s.repo.iter_commits(f"{remote.name}/main"))
+            s.repo.git.reset("--hard", remote_latest_commit.hexsha)
 
             # remove everything in rs2 form s
-            for hash in block_hashes: 
-                del s.blocks[hash]
+            try:
+                for hash in block_hashes: 
+                    del s.blocks[hash]
+            except:
+                pass
 
             # add everything in rs to s
             for hash, tnx in rs.tnxs.items():
@@ -360,7 +363,7 @@ def rebase_on_remotes(s: State):
 
         # otherwise put everything we can into mempool
         else:
-            for tnx in rs.tnxs.values():
+            for tnx in [*rs.tnxs.values()] + rs.mempool:
                 if validate_tnxi(s, tnx):
                     commit_transaction(s, tnx)
         

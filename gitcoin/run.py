@@ -9,7 +9,7 @@ from gitcoin.animations.miku import task_and_animate
 from gitcoin.mining import mine
 from git import Repo
 
-from gitcoin.logic import make_keys, State, init_chain, commit_transaction
+from gitcoin.logic import make_keys, State, init_chain, commit_transaction, rebase_on_remotes
 from gitcoin.utils import pem_to_simple, simple_to_pem
 from gitcoin.transact import make_transaction, init_transaction
 
@@ -73,10 +73,6 @@ def run():
     mine_parser = subparsers.add_parser(
         "mine", help="Mine Gitcoin, with love <3")
 
-    # observer command
-    observer_parser = subparsers.add_parser(
-        "observer", help="Take a look at your own blockchain")
-
     keypair_parser = subparsers.add_parser("keypair", help="generate or set keypairs")
     keypair_subparsers = keypair_parser.add_subparsers(dest="keypair_action", help="idk")
 
@@ -92,6 +88,8 @@ def run():
     repo_set_subparser = repo_subparsers.add_parser("set", help="set your repo location")
     repo_set_subparser.add_argument("location", help="location of your repo", type=str)
 
+    subparsers.add_parser("rebase")
+    
 
     args = parser.parse_args()
 
@@ -144,9 +142,6 @@ def run():
         else:
             task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 0)
 
-    elif args.command == "observer":
-        print("Observer placeholder")
-
     elif args.command == "keypair":
         if args.keypair_action == "set":
             with open(args.privkey, "r") as f:
@@ -188,6 +183,10 @@ def run():
                 raise Exception("no repo yet, set it??")
 
             print(f"location: {state.repo_location}")
+
+    elif args.command == "rebase":
+        init_chain(state)
+        rebase_on_remotes(state)
 
 
 def load_state(state: State):
