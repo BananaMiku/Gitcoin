@@ -105,7 +105,6 @@ def run():
         if not state.repo_location:
             raise Exception("Please set the repo for your blockchain")
         
-        #task_and_animate(random.choice(["plane", "wheel"]), TODO REPLACE, (state,), None)
         payment_info = dest_and_amt_info(args.dest_and_amt)
         fee = 1
         if len(payment_info) % 2 != 0:
@@ -114,8 +113,9 @@ def run():
         dest_list = [[payment_info[i], int(payment_info[i+1])] for i in range(0, len(payment_info), 2)]
         if args.i:
             init_transaction(state, dest_list)
+            task_and_animate(random.choice(["plane", "wheel"]), init_transaction, (state, dest_list, ), None)
         else:
-            make_transaction(state, dest_list, fee)
+            task_and_animate(random.choice(["plane", "wheel"]), make_transaction, (state, dest_list, fee, ), None)
 
 
     elif args.command == "remote":
