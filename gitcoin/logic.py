@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from git import Repo, Commit
 import re
-from ecdsa import SigningKey, SECP256k1
+from ecdsa import VerifyingKey, SECP256k1
 from ecdsa.util import string_to_number
 
 @dataclass
@@ -44,11 +44,18 @@ class TnxInfo:
 
         return TnxInfo(pubkey, srcs, dests, fee, signature)
 
-    def validate(self):
-
+    def validate(self, strToBeValidated: str):
         # validate signature
+        # Create a VerifyingKey object from the public key
+        pubkey_bytes = bytes.fromhex(self.pubkey)  # Convert the hex public key to bytes
+        verifying_key = VerifyingKey.from_string(pubkey_bytes, curve=SECP256k1)
 
-        return False
+        try: 
+            is_valid = verifying_key.verify(bytes.fromhex(self.signature), strToBeValidated)
+            return is_valid  # Return True if the signature is valid
+        except Exception as e:
+            print(f"Signature verification failed: {e}")
+            return False  # Return False if verification fails or an error occurs
 
     def _generate_signature(self, data: bytes, privkey: str) -> bytes:
         """
