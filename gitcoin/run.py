@@ -121,7 +121,7 @@ def run():
         else:
             def do_nothing():
                 return
-            task_and_animate(random.choice(["plane", "wheel"]), f, (), None, 3)
+            task_and_animate(random.choice(["plane", "wheel"]), do_nothing, (,), None, 3)
             f()
 
     elif args.command == "remote":
