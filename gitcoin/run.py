@@ -140,7 +140,7 @@ def run():
         if args.r:
             mine(state)
         else:
-            task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 0)
+            task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 3)
 
     elif args.command == "keypair":
         if args.keypair_action == "set":
