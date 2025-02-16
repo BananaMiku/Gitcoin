@@ -44,9 +44,12 @@ def task_and_animate(animation_name, func, func_args, suc_frame):
     ani.join()
     #prob write_frame
     if animation_name == "mining":
+        ...
         #print suc frame 
     if animation_name == "slots":
+        ...
         #print suc frame 
+
 
 #like animate but with one frame
 def write_frame(source):
