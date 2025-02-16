@@ -334,10 +334,10 @@ def rebase_on_remotes(s: State) -> list[str]:
             for tnx in rs.tnxs.values():
                 if validate_tnx(tnx, s):
                     commit_transaction(s, tnx)
-
         
 def commit_transaction(s: State, tnx_i: TnxInfo):
     s.repo.git.commit("--empty-commit", "-m", f"\"{str(tnx_i)}\"")
     commit = next(s.repo.iter_commits())
     tnx = Tnx.from_info(commit.hash, commit.parent[0].hash, tnx_i)
     s.tnxs[tnx.hash] = tnx
+

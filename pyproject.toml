@@ -14,6 +14,15 @@ packages = ["gitcoin"]
 
 [[tool.setuptools.ext-modules]]
 name = "gitcoin.hashing_utils.mine_cpu"
-sources = [ "gitcoin/hashing_utils/mine_cpu.c", "gitcoin/hashing_utils/sha1.c" ]
+sources = [ "gitcoin/hashing_utils/mine_cpu.cpp", "gitcoin/hashing_utils/sha1.c" ]
 include-dirs = ["src/hashing_utils"]
 py-limited-api = true
+
+# [[tool.setuptools.ext-modules]]
+# name = "gitcoin.hashing_utils.mine_gpu"
+# sources = [ "gitcoin/hashing_utils/mine_gpu.cu" ]
+# include-dirs = ["src/hashing_utils"]
+# py-limited-api = true
+# command = "nvcc"
+# optional = true
+
