@@ -42,6 +42,7 @@ def run():
         state.repo = Repo(state.repo_location)
     
     parser = argparse.ArgumentParser()
+    parser.add_argument("-r", action="store_true", help="raw text, no animations")
     subparsers = parser.add_subparsers(dest="command", help="sub-command help")
 
     # payment command
@@ -115,7 +116,10 @@ def run():
         if args.i:
             f = lambda: init_transaction(state, dest_list)
 
-        task_and_animate(random.choice(["plane", "wheel"]), f, (), None, 3)
+        if args.r:
+            f()
+        else:
+            task_and_animate(random.choice(["plane", "wheel"]), f, (), None, 3)
 
 
     elif args.command == "remote":
@@ -135,7 +139,10 @@ def run():
         if not state.repo_location:
             raise Exception("Please set the repo for your blockchain")
 
-        task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 0)
+        if args.r:
+            mine(state)
+        else:
+            task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 0)
 
     elif args.command == "observer":
         print("Observer placeholder")

@@ -241,8 +241,8 @@ def init_chain(state: State):
             if (bloc := Block.from_commit(commit)) is not None:
                 last_block = bloc
 
-            else:
-                state.mempool.append(TnxInfo.from_str(commit.message))
+            elif (tnx := TnxInfo.from_str(commit.message)) is not None:
+                state.mempool.append(tnx)
 
             continue
 
