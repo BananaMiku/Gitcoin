@@ -48,7 +48,7 @@ Great animation soothing our soul as we transact and mine Gitcoins!
 
 #
 # Packages
-* To install all packages necessary: `pip install -r requirements.txt`
+* In case packages need fixing, to install all packages necessary: `pip install -r requirements.txt`
 
 # Testing
 * Running tests for transactions (from ./Gitcoin directory):
