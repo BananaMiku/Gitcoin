@@ -3,6 +3,9 @@ from git import Repo, Commit
 import re
 from ecdsa import VerifyingKey, SECP256k1
 from ecdsa.util import string_to_number
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 
 @dataclass
 class TnxInfo:
@@ -65,14 +68,10 @@ class TnxInfo:
         :param privkey: The private key as a hexadecimal string.
         :return: The Schnorr signature as bytes.
         """
-        # Create a SigningKey object using the provided private key
-        privkey_bytes = bytes.fromhex(privkey)  # Convert the hex private key to bytes
-        signing_key = SigningKey.from_string(privkey_bytes, curve=SECP256k1)
+        key = RSA.import_key(privkey)
+        h = SHA256.new(data)
+        return pkcs1_15.new(key).sign(h)
 
-        # Generate the Schnorr signature
-        signature = signing_key.sign(data)
-
-        return signature  # Return the signature as bytes
 
     def __str__(self):
         srcs_str = '\n'.join(self.srcs)

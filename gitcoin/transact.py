@@ -13,10 +13,7 @@ N = 2**64 - 59  # Large prime modulus (can be adjusted)
 
 
 def make_keys():
-    priv = generate_large_prime()
-    pub = pow(G, priv, N)
-    return [hex(priv)[2:], hex(pub)[2:]]
-
+    pass
 
 class User:
     def __init__(self, user_id):
