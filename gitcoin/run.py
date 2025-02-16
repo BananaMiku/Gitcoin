@@ -60,6 +60,15 @@ def run():
     observer_parser = subparsers.add_parser(
         "observer", help="Take a look at your own blockchain")
 
+    keypair_parser = subparsers.add_parser("keypair", help="generate or set keypairs")
+    keypair_subparsers = keypair_parser.add_subparsers(dest="keypair_action", help="idk")
+
+    keypair_subparsers.add_parser("generate", help="generate private key")
+    keypair_set_parser = keypair_subparsers.add_parser("set", help="set your private key")
+    keypair_set_parser.add_argument("privkey", help="your private key", type=str)
+
+    
+
     args = parser.parse_args()
 
     # no input, print help message
@@ -97,6 +106,14 @@ def run():
 
     elif args.command == "observer":
         print("Observer placeholder")
+
+    if args.command == "keypair":
+        if args.keypair_action == "set":
+            print(f"setting private key {args.privkey}")
+        if args.keypair_action == "generate":
+            [priv, pub] = make_keys()
+            print(f"keys:\nprivate {priv}\npublic: {pub}\n\nthese are saved")
+    
 
 
 if __name__ == "__main__":
