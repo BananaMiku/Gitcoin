@@ -29,7 +29,7 @@ dependencies = [
 gitcoin = "gitcoin.run:run"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools-cuda"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -41,11 +41,12 @@ sources = [ "gitcoin/hashing_utils/mine_cpu.cpp", "gitcoin/hashing_utils/sha1.c"
 include-dirs = ["src/hashing_utils"]
 py-limited-api = true
 
-# [[tool.setuptools.ext-modules]]
-# name = "gitcoin.hashing_utils.mine_gpu"
-# sources = [ "gitcoin/hashing_utils/mine_gpu.cu" ]
-# include-dirs = ["src/hashing_utils"]
-# py-limited-api = true
-# command = "nvcc"
-# optional = true
+[[tool.setuptools.ext-modules]]
+name = "gitcoin.hashing_utils.mine_gpu"
+sources = [ "gitcoin/hashing_utils/sha1.c", "gitcoin/hashing_utils/mine_gpu.cpp" ]
+library-dirs = [ "/usr/local/cuda/lib64" ]
+libraries = [ "cudart", "cuda"]
+extra-objects = [ "gitcoin/hashing_utils/mine_gpu_kernel.o" ]
+include-dirs = [ "src/hashing_utils" ]
+py-limited-api = true
 
