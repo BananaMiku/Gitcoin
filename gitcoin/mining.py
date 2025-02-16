@@ -9,7 +9,7 @@ def mine(state: State):
     last_rebase_time = datetime.now()
 
     while True:
-        if mine_block.mine(0x10000):
+        if mine_block.mine(0x10000, state):
             break
 
         if (last_rebase_time - datetime.now()).total_seconds() > 10:

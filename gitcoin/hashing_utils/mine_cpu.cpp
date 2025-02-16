@@ -60,7 +60,6 @@ static PyObject *mine(PyObject *self, PyObject *args)
 
     if(hash_value == initial_hash_value + limit) {
         Py_RETURN_NONE;
-        return NULL;
     }
 
     return PyBytes_FromStringAndSize((const char *)block.buf, block.len);
