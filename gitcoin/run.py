@@ -4,8 +4,9 @@ import json
 import os
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives import serialization
-from  gitcoin.animations.miku import task_and_animate
+from gitcoin.animations.miku import task_and_animate
 from gitcoin.mining import mine
+from git import Repo
 
 from gitcoin.logic import make_keys, State
 from gitcoin.utils import pem_to_simple, simple_to_pem
@@ -162,14 +163,17 @@ def run():
             print(f"keys:\n{simple_to_pem(state.privkey, True)}\n{simple_to_pem(state.pubkey, False)}")
 
     elif args.command == "repo":
-        if args.keypair_action == "set":
+        if args.repo_action == "set":
             state.repo_location = args.location
             state.repo = Repo(args.location)
             print(f"set location to {args.location}")
+            write_state(state)
 
-        if args.keypair_action == "get":
+        if args.repo_action == "get":
             if not state.repo_location:
                 raise Exception("no repo yet, set it??")
+
+            print(f"location: {state.repo_location}")
 
 
 def load_state(state: State):
