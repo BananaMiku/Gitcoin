@@ -156,7 +156,7 @@ class RemoteState:
     blocks: dict[str, Block]
 
 
-def validate_tnx(to_validate: Tnx, s: State):
+def validate_tnx(to_validate: TnxInfo, s: State):
     #tnx should exist
     if not to_validate:
         print("need valid tnx obj")
@@ -206,17 +206,21 @@ def validate_tnx(to_validate: Tnx, s: State):
 
 
 #validates block and updates tnx_map
-def validate_block(added_tnxs: [Tnx], s: State):
-    for i, tnx in enumerate(added_tnx):
-        if not validate_tnx(tnx, s):
-            #clears everything we added
-            for j in range(i):
-                del s.tnxs[added_tnx[j].hash]
+def validate_tnxi(s: State, tnxi: TnxInfo):
+    if not tnxi.validate():
+        return False
 
-            return False
-        s.tnxs[tnx.hash] = tnx
+    if not validate_tnx(tnxi, s):
+        return False
+
+    # no double counting sources
+    for tnx in s.mempool:
+        for src in tnx.srcs:
+            if src in tnxi.srcs:
+                return False
 
     return True
+
 
 
 def init_chain(state: State):
@@ -279,6 +283,8 @@ def rebase_on_remotes(s: State) -> list[str]:
     all pending transactions not on that chain after
     """
     for remote in s.repo.remotes:
+        if remote.name == "origin": continue
+        
         remote.fetch()
         blocks = 0
         
@@ -355,13 +361,13 @@ def rebase_on_remotes(s: State) -> list[str]:
 
             # try to add anything else we can add
             for tnx in rs2.tnxs.values():
-                if validate_tnx(tnx, s):
+                if validate_tnxi(s, tnx):
                     commit_transaction(s, tnx)
 
         # otherwise put everything we can into mempool
         else:
             for tnx in rs.tnxs.values():
-                if validate_tnx(tnx, s):
+                if validate_tnxi(s, tnx):
                     commit_transaction(s, tnx)
         
 def commit_transaction(s: State, tnx_i: TnxInfo):
