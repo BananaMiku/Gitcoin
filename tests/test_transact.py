@@ -63,6 +63,20 @@ def test_transaction_already_used():
         pass
 
 
+def test_transaction_excess():
+    s = State({}, [], {}, None, pub, priv)
+    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
+
+    tnx: TnxInfo = make_transaction(s, [["pub2", 6]], 2)
+    assert tnx.pubkey == pub
+    assert tnx.srcs == ["hash1"]
+    assert tnx.dests["pub2"] == 6
+    assert tnx.dests[pub] == 2 # excess
+    assert tnx.mining_fee == 2
+    assert tnx.validate()
+
+    
+
 
 
 
