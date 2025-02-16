@@ -104,12 +104,6 @@ class TnxInfo:
         srcs_str = '\n'.join(self.srcs)
         dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", self.dests))
         return f"{self.pubkey}\n\n{srcs_str}\n{dests_str}\n{self.mining_fee}\n{self.signature}"
-        #dests_str = 10 -----BEGIN PUBLIC KEY-----
-# MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4X7bP0rqA+n7/qWszUWQtESVB
-# PffUFFhBQ37iV2SsfntpOIUO+qUrsOXfa5EF0eN1UqEjxr/WLu2xOfIz7NovwSel
-# VXluaTr2i544fCGoftubjiA/9lBLHoo9O+ygWFsvBkaMZjmcoeM5FoSRM5lfEkwN
-# SRkdTSGnw87XihysDQIDAQAB
-# -----END PUBLIC KEY-----
 
 
 @dataclass

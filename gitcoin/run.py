@@ -10,6 +10,7 @@ from git import Repo
 
 from gitcoin.logic import make_keys, State
 from gitcoin.utils import pem_to_simple, simple_to_pem
+from gitcoin.transact import make_transaction, init_transaction
 
 
 # only integer transactions are allowed
@@ -50,6 +51,7 @@ def run():
         "pay", help="Pay a destination a certain amount of Gitcoin")
     pay_parser.add_argument("dest_and_amt", nargs='+',
                             help="Paying a destination a certain amount of Gitcoin with fees")
+    pay_parser.add_argument("-i", action="store_true", help="initial commit, doesnt add sources")
 
     # subparser for remote command
     remote_parser = subparsers.add_parser("remote", help="git remote clone")
@@ -90,7 +92,7 @@ def run():
     repo_subparsers.add_parser("get", help="get repo location")
     repo_set_subparser = repo_subparsers.add_parser("set", help="set your repo location")
     repo_set_subparser.add_argument("location", help="location of your repo", type=str)
-    
+
 
     args = parser.parse_args()
 
@@ -109,8 +111,11 @@ def run():
         if len(payment_info) % 2 != 0:
             fee = payment_info.pop(-1)
 
-        for i in range(0, len(payment_info), 2):
-            print( f"Destination: {payment_info[i]}, Amount: {payment_info[i+1]}")
+        if args.i:
+            init_transaction(state, [payment_info[i:i+2] for i in range(0, len(payment_info), 2)])
+        else:
+            make_transaction(state, [payment_info[i:i+2] for i in range(0, len(payment_info), 2)], fee)
+
 
     elif args.command == "remote":
         print('remote')

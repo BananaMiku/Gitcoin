@@ -35,7 +35,12 @@ def get_balance(self, state: State) -> int:
 
     return total_balance
 
-def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
+def init_transaction(state, dest_list: list[tuple[str, int]]):
+    dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
+    return TnxInfo.sign(state.privkey, state.pubkey, [], dest_dict, 0)
+
+
+def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, init=False):
     '''
     pubkey: The public key of the user (string)
     privkey: The private key of the user (string)
