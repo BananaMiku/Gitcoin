@@ -112,9 +112,9 @@ def run():
 
         init_chain(state)
         dest_list = [[payment_info[i], int(payment_info[i+1])] for i in range(0, len(payment_info), 2)]
-        f = lambda: commit_transaction(make_transaction(state, dest_list, fee))
+        f = lambda: commit_transaction(state, make_transaction(state, dest_list, fee))
         if args.i:
-            f = lambda: commit_transaction(init_transaction(state, dest_list))
+            f = lambda: commit_transaction(state, init_transaction(state, dest_list))
 
         if args.r:
             f()
