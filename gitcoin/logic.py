@@ -225,7 +225,6 @@ def init_chain(state: State):
 
     last_block = None
     for commit in state.repo.iter_commits():
-        print(f"|{commit.message}|")
 
         if last_block is None:
 
