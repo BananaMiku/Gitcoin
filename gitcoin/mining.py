@@ -1,6 +1,6 @@
 from datetime import datetime
 from threading import Thread
-from logic import State, 
+from logic import State, rebase_on_remotes, 
 
 def mine(state: State):
 

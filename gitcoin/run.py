@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+from gitcoin.transact import make_keys
 
 # only integer transactions are allowed
 def dest_and_amt(input):
@@ -23,25 +24,30 @@ def dest_and_amt(input):
 def run():
     parser = argparse.ArgumentParser()
     # subparser accepts only one option name (no short and long)
-    subparers = parser.add_subparsers(dest="command", help="sub-command help")
+    subparsers = parser.add_subparsers(dest="command", help="sub-command help")
 
     # payment command
     parser.add_argument('-p', "--pay", nargs='+', help="Paying a desintination a certain amount of Gitcoin with fess",
                         type=dest_and_amt)
 
     # subparser for remote command
-    remote_parser = subparers.add_parser("remote", help="git remote clone")
+    remote_parser = subparsers.add_parser("remote", help="git remote clone")
     remote_subparsers = remote_parser.add_subparsers(dest="remote_action", help="sub-command help")
 
     # subparser remote add 
-    remote_add_parser = remote_subparsers.add_parser(
-        "add", help="git remote add clone")
+    remote_add_parser = remote_subparsers.add_parser( "add", help="git remote add clone")
     remote_add_parser.add_argument("name", help="Name of the remote", type=str)
     remote_add_parser.add_argument("url", help="URL of the remote", type=str)
     # subparser remote remove
-    remote_remove_parser = remote_subparsers.add_parser(
-        "remove", help="git remote remove clone")
+    remote_remove_parser = remote_subparsers.add_parser( "remove", help="git remote remove clone")
     remote_remove_parser.add_argument("name", help="Name of the remote", type=str)
+
+    keypair_parser = subparsers.add_parser("keypair", help="generate or set keypairs")
+    keypair_subparsers = keypair_parser.add_subparsers(dest="keypair_action", help="idk")
+
+    keypair_subparsers.add_parser("generate", help="generate private key")
+    keypair_set_parser = keypair_subparsers.add_parser("set", help="set your private key")
+    keypair_set_parser.add_argument("privkey", help="your private key", type=str)
 
     # mine command
     parser.add_argument("-m", "--mine", help="Mine Gitcoin, with love <3", action="store_true") 
@@ -78,6 +84,13 @@ def run():
         else:
             raise Exception("Invalid remote command")
 
+    if args.command == "keypair":
+        if args.keypair_action == "set":
+            print(f"setting private key {args.privkey}")
+        if args.keypair_action == "generate":
+            [priv, pub] = make_keys()
+            print(f"keys:\nprivate {priv}\npublic: {pub}\n\nthese are saved")
+    
     # mine command going thru
     if args.mine:
         print("Mining Gitcoin...")

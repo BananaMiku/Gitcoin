@@ -1,15 +1,22 @@
 import random
-import sympy
 import hashlib
-from logic import State, Tnx, TnxInfo
+from gitcoin.logic import State, Tnx, TnxInfo
 
 def generate_large_prime(bits=32):
+    import sympy
     """Generates a random large prime number with the given bit size."""
     return sympy.randprime(2**(bits-1), 2**bits)
 
 # Global constants for encryption
 G = 3  # Generator
 N = 2**64 - 59  # Large prime modulus (can be adjusted)
+
+
+def make_keys():
+    priv = generate_large_prime()
+    pub = pow(G, priv, N)
+    return [hex(priv)[2:], hex(pub)[2:]]
+
 
 class User:
     def __init__(self, user_id):
@@ -110,18 +117,5 @@ class Bank:
             self.balances[user.user_id] += amount
 
 
-# Example of usage
-user1 = User("user1")
-user2 = User("user2")
-
-bank = Bank()
-bank.create_account(user1)
-bank.create_account(user2)
-
-# Setting initial balances for demonstration purposes
-bank.update_balance(user1, 100)  # Giving user1 initial balance
-
-# Attempting a transaction
-print(bank.balances)
-bank.make_transaction(user1, user2, 50, user1.private_prime)
-print(bank.balances)
+if __name__ == "__main__":
+    print(make_keys())
