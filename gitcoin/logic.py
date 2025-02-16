@@ -69,7 +69,6 @@ class TnxInfo:
         """Sign the transaction using the private key."""
         
         # Create a string to sign that includes relevant transaction details
-        print(simple_to_pem(privkey, True))
         signature = load_pem_private_key(simple_to_pem(privkey, True).encode(), None).sign(
             _construct_message(pubkey, srcs, dests, fee),
             padding.PSS(
@@ -102,7 +101,7 @@ class TnxInfo:
 
     def __str__(self):
         srcs_str = '\n'.join(self.srcs)
-        dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", self.dests))
+        dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", self.dests.items()))
         return f"{self.pubkey}\n\n{srcs_str}\n{dests_str}\n{self.mining_fee}\n{self.signature}"
 
 
@@ -227,6 +226,9 @@ def validate_tnxi(s: State, tnxi: TnxInfo):
 def init_chain(state: State):
     """constructs the commit hash -> Tnx map from the repo"""
 
+    if not state.repo.heads:
+        return
+
     state.tnxs = {}
     state.mempool = []
     state.blocks = {}
@@ -257,25 +259,28 @@ def init_chain(state: State):
         state.tnxs[tnx.hash] = tnx
         last_block.tnxs.append(tnx)
 
-    last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
-    state.blocks[last_block.hash] = last_block
+    if last_block is not None:
+        last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
+        state.blocks[last_block.hash] = last_block
 
 
 def match_block(s: str) -> re.Match:
     return re.match(r"(\w+)\n\n(\w+)", s)
 
 def match_transaction(s: str) -> re.Match:
-    return re.match(r"(\w+)\n\n((?:\w+\n)+)((?:\d+ \w+\n)*(?:\d+ \w+))\n(\d)\n(\w+)", s)
+    return re.match(r"(\w+)\n\n((?:\w+\n)+)((?:(?:\d+ \w+\n)*(?:\d+ \w+))\n|())(\d)\n(\w+)", s)
 
 
 def append_block(s: State, header: str):
     """appends a block with a given header"""
-    s.repo.git.commit("--empty-commit", "-m", f"\"{header}\n\n{s.pubkey}\"")
+    block = Block.from_commit(next(s.repo.iter_commits()))
+
     # TODO: validate the amount of zeros
     # TODO: make the amount of zeros required depend on how long it took to make the last block
+    # TODO: move each commit we have from mempool to tnxs
 
 
-def rebase_on_remotes(s: State) -> list[str]:
+def rebase_on_remotes(s: State):
     """
     updates the chain based on the remotes
     adds all valid pending transactions the other chains have
@@ -357,9 +362,8 @@ def rebase_on_remotes(s: State) -> list[str]:
                 if validate_tnxi(s, tnx):
                     commit_transaction(s, tnx)
         
+
 def commit_transaction(s: State, tnx_i: TnxInfo):
-    s.repo.git.commit("--empty-commit", "-m", f"\"{str(tnx_i)}\"")
-    commit = next(s.repo.iter_commits())
-    tnx = Tnx.from_info(commit.hexsha, commit.parent[0].hexsha, tnx_i)
-    s.tnxs[tnx.hash] = tnx
+    s.repo.git.commit("--allow-empty", "-m", f"{str(tnx_i)}")
+    s.mempool.append(tnx_i)
 

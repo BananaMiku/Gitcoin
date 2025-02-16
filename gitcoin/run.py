@@ -9,7 +9,7 @@ from gitcoin.animations.miku import task_and_animate
 from gitcoin.mining import mine
 from git import Repo
 
-from gitcoin.logic import make_keys, State
+from gitcoin.logic import make_keys, State, init_chain, commit_transaction
 from gitcoin.utils import pem_to_simple, simple_to_pem
 from gitcoin.transact import make_transaction, init_transaction
 
@@ -110,12 +110,13 @@ def run():
         if len(payment_info) % 2 != 0:
             fee = payment_info.pop(-1)
 
+        init_chain(state)
         dest_list = [[payment_info[i], int(payment_info[i+1])] for i in range(0, len(payment_info), 2)]
+        f = lambda: make_transaction(state, dest_list, fee)
         if args.i:
-            init_transaction(state, dest_list)
-            task_and_animate(random.choice(["plane", "wheel"]), init_transaction, (state, dest_list, ), None)
-        else:
-            task_and_animate(random.choice(["plane", "wheel"]), make_transaction, (state, dest_list, fee, ), None)
+            f = lambda: init_transaction(state, dest_list)
+
+        task_and_animate(random.choice(["plane", "wheel"]), f, (), None)
 
 
     elif args.command == "remote":
