@@ -33,7 +33,8 @@ bool mine_single_fast(SHA1_CTX ctx, nonce nonce, char *nonce_string) {
     }
     SHA1Final((unsigned char *)hash, &ctx);
 
-    return hash[0] || hash[1] || hash[2] || (hash[3] & 0xf0);
+    // return hash[0] || hash[1] || hash[2] || (hash[3] & 0xf0);
+    return hash[0] || hash[1];
 }
 
 static PyObject *mine(PyObject *self, PyObject *args)
