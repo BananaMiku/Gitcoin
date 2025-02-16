@@ -24,6 +24,7 @@ dependencies = [
     "pytest==8.3.4",
     "smmap==5.0.2"
 ]
+license = { text = "MIT" }
 
 [project.scripts]
 gitcoin = "gitcoin.run:run"
@@ -37,7 +38,7 @@ packages = ["gitcoin"]
 
 [[tool.setuptools.ext-modules]]
 name = "gitcoin.hashing_utils.mine_cpu"
-sources = [ "gitcoin/hashing_utils/mine_cpu.cpp", "gitcoin/hashing_utils/sha1.c" ]
+sources = [ "gitcoin/hashing_utils/mine_cpu.cpp", "gitcoin/hashing_utils/sha1.c"]
 include-dirs = ["src/hashing_utils"]
 py-limited-api = true
 

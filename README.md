@@ -71,3 +71,6 @@ Great animation soothing our soul as we transact and mine Gitcoins!
 ![black horse](res/black-horse-head.jpg)
 ![horse head](res/horse-head-portrait.jpg)
 ![white horse](res/horse-white.jpg)
+
+# TODO
+Upload to PyPI
