@@ -3,13 +3,37 @@ import os
 import sys
 import math
 from time import sleep
+from colorist import ColorRGB
+
 ASCII_CHARS = "@%#*+=-:. "
 
-ANIMATION_DIRS_AND_TIMES = {"mining" : [.5, True]} 
-TEXTS = {"mining" : "text/miningmsg.txt"}
+ANIMATION_DIRS_AND_TIMES = {"mining" : [.5, True], 
+                            "slots" : [.2, True],
+                            "plane" : [.2, True],
+                            "dollar" : [.2, True],
+                            "wheel" : [.2, True]
+                            } 
 
-def get_frame():
+TEXTS = {"mining" : "text/miningmsg.txt",
+         "slots" : "text/slots.txt",
+         "dollar" : "text/dollar.txt",
+         "plane" : "text/plane.txt",
+         "wheel" : "text/wheel.txt",
+         }
+
+def write_frame():
     pass 
+
+def mine_and_animate(animation_name):
+    mine = threading.Thread(target=print_square, args=(,))
+    ani = threading.Thread(target=animate, args=(animation_name,))
+
+    mine.start()
+    ani.start()
+
+    mine.join()
+    ani.join()
+    #prob write_frame
 
 def animate(name):
     assert name in ANIMATION_DIRS_AND_TIMES 
@@ -56,7 +80,7 @@ def animate(name):
             cur_frame = 1 
             dir = 1 
 
-        if cur_frame >= 3:
+        if cur_frame >= len(frames):
             if looping:
                 cur_frame = 1
                 dir = -1 
@@ -116,13 +140,34 @@ def get_ascii_frame(img: [[(int, int, int)]]):
 def get_grey_scale(pixel: (int, int, int)):
     return math.floor(.3 * pixel[0] + .59 * pixel[1] + .11 * pixel[2])
 
+def get_gradient(dist, start, stop):
+    def get_r(y):
+        return math.floor((stop[0] - start[0])/dist) * y + start[0]
+
+    def get_g(y):
+        return math.floor((stop[1] - start[1])/dist) * y + start[1]
+    
+    def get_b(y):
+        return math.floor((stop[2] - start[2])/dist) * y + start[2]
+
+    ret = []
+    for i in range(dist):
+        ret.append((get_r(i), get_g(i), get_b(i)))
+
+    return ret
+
+
+
 def print_frame(frame, width):
+    grad = get_gradient(len(frame), (63, 94, 251), (252, 70, 107))
     print_msg = ""
-    for row in frame:
-        print_row = ""
+    for i, row in enumerate(frame):
+        color = ColorRGB(grad[i][0], grad[i][1], grad[i][2])
+        print_row = f"{color}"
         for char in row: 
             print_row += char
         print_row = print_row[:width]
+        print_row += f"{color.OFF}"
         print_row += "\n"
         print_msg += print_row
         
