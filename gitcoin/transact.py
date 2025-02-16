@@ -35,62 +35,6 @@ def get_balance(self, state: State) -> int:
 
     return total_balance
 
-# def make_transaction(self, state, dest_list, fee):
-#     '''
-#     state: form logic.py, State class
-#     dest_list: list of tuples, each tuple is of the form (reciever, amount)
-#     fee: cost for making transaction
-#     '''
-#     # Calculate the total amount to be sent
-#     total_amount = sum(amount for _, amount in dest_list)
-
-#     # Start with the transaction fee
-#     total_spent = fee  
-#     srcs = []  # Keep track of sources used in the transaction
-
-#     # Gather all previously used sources
-#     used_sources = set()
-#     for tnx in state.tnxs.values():
-#         used_sources.update(tnx.srcs)
-        
-#     # Validate that sufficient funds are available
-#     for dest_pubkey, amount in dest_list:
-#         if amount <= 0:
-#             raise ValueError(f"Transaction amount cannot be negative for destination {dest_pubkey}.")
-#         total_spent += amount
-    
-#     # Gather sources and check their availability
-#     sources_balance = self.get_balance(state)
-
-#     #Calculate how much the given person has
-#     for tnx_hash, tnx in state.tnxs.items():
-#         if tnx.pubkey == self.pubkey:  # Only consider transactions related to the sender
-#             srcs.extend(tnx.srcs)
-#             total_spent -= tnx.dests.get(self.pubkey, 0)
-
-#     # Check if any new sources appear again
-#     for source in srcs:
-#         if source in used_sources:
-#             raise ValueError(f"Source {source} has already been used in another transaction.")
-
-#     # If the total amount (+ fee) exceeds the balance, raise an error
-#     if total_spent > sources_balance:
-#         raise ValueError("Insufficient funds for the transaction.")
-    
-#     # Create a new transaction info object
-#     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
-#     tnx_info = TnxInfo(pubkey=self.pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
-
-#     # Create the transaction itself
-#     new_tnx_hash = 'some_hash_generation_logic'  # This should create a unique hash for the transaction
-#     new_tnx_prev_hash = 'some_previous_hash_logic'  # Logic to get the last transaction hash or previous state
-
-#     transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
-
-#     # Sign the transaction
-#     transaction.signature = transaction.sign(self, state.privkey)
-
-#     return transaction # Or return the transaction object if preferred
 def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
     '''
     pubkey: The public key of the user (string)
@@ -119,23 +63,38 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
             raise ValueError(f"Transaction amount cannot be negative for destination {dest_pubkey}.")
         total_spent += amount
 
-    # Check if the balance is sufficient
-    # if total_spent > balance:
-        # raise ValueError("Insufficient funds for the transaction.")
-
     # Calculate how much the given person has
-    for tnx_hash, tnx in state.tnxs.items():
-        if tnx.pubkey == state.pubkey:  
-            srcs.extend(tnx.srcs)
-            total_spent -= tnx.dests.get(state.pubkey, 0)
+    for hash, tnx in state.tnxs.items():
+        bad = True
+        for tnx_ in tnx.dests:
+            if tnx_[0] == state.pubkey:
+                bad = False
+                for hash_temp, tnx_temp in state.tnxs.items():
+                    if hash in tnx_temp.srcs:
+                        bad = True
+                        break
+                if bad:
+                    continue
 
-    # Check if any new sources appear again
-    for source in srcs:
-        if source in used_sources:
-            raise ValueError(f"Source {source} has already been used in another transaction.")
+                srcs.append(tnx.hash)
+                total_spent -= tnx_[1]
+    
+    for hash, block in state.blocks.items():
+        if block.owner==state.pubkey:
+            bad = False
+            for hash_temp, tnx_temp in state.tnxs.items():
+                if hash in tnx_temp.srcs:
+                    bad = True
+                    break
+            if bad:
+                continue
+            srcs.append(hash)
+            total_spent -= block.worth
 
     # Create a new transaction info object
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
+    if total_spent > 0:
+        raise ValueError(f"Total Spent should not be positive.")
 
     return TnxInfo.sign(state.privkey, state.pubkey, srcs, dest_dict, fee)
 
@@ -159,7 +118,3 @@ class Bank:
         """Updates the balance for the user."""
         if user.user_id in self.balances:
             self.balances[user.user_id] += amount
-
-
-if __name__ == "__main__":
-    print(make_keys())

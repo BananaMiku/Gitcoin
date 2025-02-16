@@ -1,4 +1,4 @@
-from gitcoin.logic import State, Tnx, TnxInfo
+from gitcoin.logic import State, Tnx, TnxInfo, Block
 from gitcoin.transact import make_transaction
 from gitcoin.utils import pem_to_simple
 
@@ -31,14 +31,14 @@ SRkdTSGnw87XihysDQIDAQAB
 
 def test_transaction_simple():
     s = State({}, [], {}, None, pub, priv)
-    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
-
+    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [[pub, 10]], 0, None, "hash1", None)
+    
     tnx: TnxInfo = make_transaction(s, [["pub2", 8]], 2)
     assert tnx.pubkey == pub
     assert tnx.srcs == ["hash1"]
     assert tnx.dests == {"pub2": 8}
     assert tnx.mining_fee == 2
-    assert tnx.verify()
+    assert tnx.validate()
 
 
 def test_coinbase_transaction_simple():
@@ -46,6 +46,7 @@ def test_coinbase_transaction_simple():
     s.blocks["hash1"] = Block("hash1", pub, 10)
 
     tnx: TnxInfo = make_transaction(s, [["pub2", 8]], 2)
+    print("46:", tnx)
     assert tnx.pubkey == pub
     assert tnx.srcs == ["hash1"]
     assert tnx.dests == {"pub2": 8}
@@ -54,8 +55,8 @@ def test_coinbase_transaction_simple():
 
 def test_transaction_already_used():
     s = State({}, [], {}, None, pub, priv)
-    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [pub, 10], 0, None, "hash1", None)
-    s.tnxs["hash2"] = Tnx(pub, ["hash1"], ["pub2", 10], 0, None, "hash2", None)
+    s.tnxs["hash1"] = Tnx("nothing", ["nothing"], [[pub, 10]], 0, None, "hash1", None)
+    s.tnxs["hash2"] = Tnx(pub, ["hash1"], [["pub2", 10]], 0, None, "hash2", None)
 
     try:
         tnx: TnxInfo = make_transaction(s, [["pub2", 8]], 2)
