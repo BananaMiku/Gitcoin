@@ -20,7 +20,6 @@ ANIMATION_DIRS_AND_TIMES = {"mining" : [.5, True],
 
 TEXTS = {"mining" : "text/miningmsg.txt",
          "slots" : "text/slots.txt",
-         "dollar" : "text/dollar.txt",
          "plane" : "text/plane.txt",
          "wheel" : "text/wheel.txt",
          "logo" : "text/logo.txt",
@@ -47,17 +46,10 @@ def task_and_animate(animation_name, func, func_args, suc_frame):
     ani.join()
     #prob write_frame
     if animation_name == "mining":
-        ...
         #print suc frame 
         write_frame("mining", "text/miningsuc.txt")
     if animation_name == "slots":
-<<<<<<< HEAD
-        ...
-        #print suc frame 
-=======
         write_frame("slots_suc", "text/slotssuc.txt")
->>>>>>> c8a16bf (finished animations)
-
 
 #like animate but with one frame
 def write_frame(name, text_src):
