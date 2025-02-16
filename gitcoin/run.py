@@ -81,6 +81,12 @@ def run():
     keypair_set_parser = keypair_subparsers.add_parser("set", help="set your private key")
     keypair_set_parser.add_argument("privkey", help="your private key", type=str)
 
+    repo_parser = subparsers.add_parser("repo", help="get or set repo location")
+    repo_subparsers = repo_parser.add_subparsers(dest="repo_action", help="idk")
+
+    repo_subparsers.add_parser("get", help="get repo location")
+    repo_set_subparser = repo_subparsers.add_parser("set", help="set your repo location")
+    repo_set_subparser.add_argument("location", help="location of your repo", type=str)
     
 
     args = parser.parse_args()
@@ -93,6 +99,8 @@ def run():
     if args.command == "pay":
         if not state.privkey or not state.pubkey:
             raise Exception("Please set your private key (or generate one) before trying to pay people")
+        if not state.repo_location:
+            raise Exception("Please set the repo for your blockchain")
         
         payment_info = dest_and_amt_info(args.dest_and_amt)
         fee = 1
@@ -114,12 +122,17 @@ def run():
             raise Exception("Invalid remote command")
 
     elif args.command == "mine":
+        if not state.privkey or not state.pubkey:
+            raise Exception("Please set your private key (or generate one) before trying to pay people")
+        if not state.repo_location:
+            raise Exception("Please set the repo for your blockchain")
+
         task_and_animate("mining", mine, (state,), None)
 
     elif args.command == "observer":
         print("Observer placeholder")
 
-    if args.command == "keypair":
+    elif args.command == "keypair":
         if args.keypair_action == "set":
             with open(args.privkey, "r") as f:
                 privkey_pem = f.read()
@@ -148,6 +161,16 @@ def run():
                 raise Exception("No keys yet, generate some ??")
             print(f"keys:\n{simple_to_pem(state.privkey, True)}\n{simple_to_pem(state.pubkey, False)}")
 
+    elif args.command == "repo":
+        if args.keypair_action == "set":
+            state.repo_location = args.location
+            state.repo = Repo(args.location)
+            print(f"set location to {args.location}")
+
+        if args.keypair_action == "get":
+            if not state.repo_location:
+                raise Exception("no repo yet, set it??")
+
 
 def load_state(state: State):
     try:
@@ -155,6 +178,7 @@ def load_state(state: State):
             s = json.load(f)
             state.pubkey = s["pubkey"]
             state.privkey = s["privkey"]
+            state.repo_location = s["repo_location"]
     except:
         pass
 
@@ -163,7 +187,8 @@ def write_state(state: State):
     with open(f"{os.environ['HOME']}/.local/share/gitcoin_state.json", "w") as f:
         json.dump({
             "pubkey": state.pubkey,
-            "privkey": state.privkey
+            "privkey": state.privkey,
+            "repo_location": state.repo_location
         }, f)
 
 

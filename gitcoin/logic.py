@@ -151,6 +151,7 @@ class State:
     mempool: list[TnxInfo] = field(default_factory=list)
     blocks: dict[str, Block] = field(default_factory=dict)
     repo: Repo = field(default_factory=lambda: Repo("."))
+    repo_location: str = ""
     pubkey: str = ""
     privkey: str = ""
 
@@ -292,15 +293,15 @@ def rebase_on_remotes(s: State) -> list[str]:
         if remote.name == "origin": continue
         
         remote.fetch()
-        blocks = 0
         
         rs = RemoteState()
         last_block = None
         recent_common_commit = None
         for commit in s.repo.iter_commits(f"{remote.name}/main"):
 
-            if commit.hexsha in blocks_set or commit.hexsha in s.tnxs:
+            if commit.hexsha in s.blocks or commit.hexsha in s.tnxs:
                 recent_common_commit = commit
+                break
             
             if last_block is None:
                 if (bloc := Block.from_commit(commit)) is not None:
