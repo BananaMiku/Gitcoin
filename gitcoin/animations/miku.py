@@ -6,6 +6,7 @@ from time import sleep
 from colorist import ColorRGB
 from gitcoin.mining import mine
 import threading
+import gitcoin
 
 ASCII_CHARS = "@%#*+=-:. "
 
@@ -53,9 +54,9 @@ def task_and_animate(animation_name, func, func_args, suc_frame):
 
 #like animate but with one frame
 def write_frame(name, text_src):
-    frames_src = os.listdir("gitcoin/animations/"+ name + "/") 
+    frames_src = os.listdir(gitcoin.__path__._path[0] + "/animations/"+ name + "/") 
     for i, frame_src in enumerate(frames_src):
-        frames_src[i] = "gitcoin/animations/" + name + "/" + frame_src
+        frames_src[i] = gitcoin.__path__._path[0] + "/animations/" + name + "/" + frame_src
     frames_src.sort()
 
     frames = []
@@ -84,9 +85,9 @@ def write_frame(name, text_src):
 
 def animate(name, st):
     assert name in ANIMATION_DIRS_AND_TIMES 
-    frames_src = os.listdir("gitcoin/animations/"+ name + "/") 
+    frames_src = os.listdir(gitcoin.__path__._path[0] + "/animations/"+ name + "/") 
     for i, frame_src in enumerate(frames_src):
-        frames_src[i] = "gitcoin/animations/" + name + "/" + frame_src
+        frames_src[i] = gitcoin.__path__._path[0] + "/animations/" + name + "/" + frame_src
     frames_src.sort()
 
     #determines
@@ -135,7 +136,8 @@ def animate(name, st):
 
 def get_text(file_name): 
     text = []
-    file = open("gitcoin/animations/" + file_name, "r")
+    
+    file = open(gitcoin.__path__._path[0] + "/animations/" + file_name, "r")
     for line in file:
         text.append(line[:len(line)-1])
 
