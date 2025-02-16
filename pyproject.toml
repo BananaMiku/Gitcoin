@@ -3,7 +3,13 @@ name = "gitcoin"
 version = "1.0"
 description = "Next-Gen crypocurrency developed by developers, for developers."
 keywords = ["git", "cryptocurrency", "blockchain"]
-authors = []
+authors = [
+    { name = "Bennett Gilig", email = "bgillig@umass.edu" },
+    { name = "Austin Henlotter", email = "ahenlotter@umass.edu" },
+    { name = "Junyang Lu", email = "lujunyang04@gmail.edu" },
+    { name = "Maxwell Tang", email = "maxwelltang@umass.edu" },
+    { name = "Steven Zhang", email = "panda.piano.sgz@gmail.com" },
+    ]
 dependencies = [
     "cffi==1.17.1",
     "colorist==1.8.3",
