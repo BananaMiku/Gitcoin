@@ -116,7 +116,7 @@ def run():
         if args.i:
             f = lambda: init_transaction(state, dest_list)
 
-        task_and_animate(random.choice(["plane", "wheel"]), f, (), None)
+        task_and_animate(random.choice(["plane", "wheel"]), f, (), None, 3)
 
 
     elif args.command == "remote":
@@ -136,7 +136,7 @@ def run():
         if not state.repo_location:
             raise Exception("Please set the repo for your blockchain")
 
-        task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None)
+        task_and_animate(random.choice(["mining", "slots"]), mine, (state,), None, 0)
 
     elif args.command == "observer":
         print("Observer placeholder")

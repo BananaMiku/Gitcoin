@@ -32,7 +32,7 @@ class Thread_State():
         self.should_end = False
 
 
-def task_and_animate(animation_name, func, func_args, suc_frame):
+def task_and_animate(animation_name, func, func_args, suc_frame, delay):
     should_end = False
     task = threading.Thread(target=func, args=func_args)
     st = Thread_State()
@@ -42,7 +42,7 @@ def task_and_animate(animation_name, func, func_args, suc_frame):
     ani.start()
 
     task.join()
-    sleep(5)
+    sleep(delay)
     st.should_end = True
     ani.join()
     #prob write_frame
