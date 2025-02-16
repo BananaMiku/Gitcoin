@@ -108,7 +108,7 @@ def run():
         payment_info = dest_and_amt_info(args.dest_and_amt)
         fee = 1
         if len(payment_info) % 2 != 0:
-            fee = payment_info.pop(-1)
+            fee = int(payment_info.pop(-1))
 
         init_chain(state)
         dest_list = [[payment_info[i], int(payment_info[i+1])] for i in range(0, len(payment_info), 2)]
@@ -119,9 +119,7 @@ def run():
         if args.r:
             f()
         else:
-            def do_nothing():
-                return
-            task_and_animate(random.choice(["plane", "wheel"]), do_nothing, (,), None, 3)
+            task_and_animate(random.choice(["plane", "wheel"]), lambda: None, (), None, 3)
             f()
 
     elif args.command == "remote":

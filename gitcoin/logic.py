@@ -132,7 +132,7 @@ class Block:
             return None
 
         [worth, owner] = match.groups()
-        return Block(commit.hexsha, owner, worth)
+        return Block(commit.hexsha, owner, int(worth))
 
     def __str__(self):
         return f"{self.worth} {self.owner}\n\n{self.hash}"
@@ -251,7 +251,6 @@ def init_chain(state: State):
         
         # if we're a block, ignore
         if (bloc := Block.from_commit(commit)) is not None:
-            last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
             state.blocks[commit.hexsha] = last_block
             last_block = bloc
             continue
@@ -266,7 +265,6 @@ def init_chain(state: State):
         last_block.tnxs.append(tnx)
 
     if last_block is not None:
-        last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
         state.blocks[last_block.hash] = last_block
 
 
@@ -316,7 +314,6 @@ def rebase_on_remotes(s: State):
                 continue
 
             if (bloc := Block.from_commit(commit)) is not None:
-                last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
                 rs.blocks[commit.hexsha] = last_block
                 last_block = bloc
             
@@ -326,7 +323,6 @@ def rebase_on_remotes(s: State):
             rs.last_block.tnxs.append(tnx)
 
         if last_block is not None:
-            last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
             rs.blocks[last_block.hash] = last_block
 
 
