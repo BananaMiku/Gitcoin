@@ -46,7 +46,6 @@ def test_coinbase_transaction_simple():
     s.blocks["hash1"] = Block("hash1", pub, 10)
 
     tnx: TnxInfo = make_transaction(s, [["pub2", 8]], 2)
-    print("46:", tnx)
     assert tnx.pubkey == pub
     assert tnx.srcs == ["hash1"]
     assert tnx.dests == {"pub2": 8}
