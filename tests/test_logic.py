@@ -1,8 +1,8 @@
-from gitcoin.logic import State, Tnx, TnxInfo, validate_tnx, Block
+from gitcoin.logic import State, Tnx, TnxInfo, validate_tnx, Block, init_chain
 from unittest.mock import patch
 from git import Repo, Commit
 from git.util import bin_to_hex
-b2h=lambda b: bin_to_hex(b).decode(ascii)
+b2x=lambda b: bin_to_hex(b).decode("ascii")
 
 
 def test_validate_tnx_simple():
@@ -27,7 +27,7 @@ def test_validate_tnx_simple():
 
 """
 def test_tnxinfo_validate_signed():
-    signed = TnxInfo.sign("privkey", "pubkey", ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
+    signed = TnxInfo.sign("b2313d6d", "65a7ddd982a132bf", ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
     assert signed.validate()
 
 
@@ -39,18 +39,20 @@ def test_tnxinfo_serialize_deserialize():
 
     
 def test_init_chain():
-    with patch.object(Repo, "iter_commits", return_value=[
-            Commit("", b"00000000000000000000", message=str(TnxInfo("nothing", ["nothing"], {"pub1": 10}, 0, "sign"))),
-            Commit("", b"00000000000000000001", message=str(Block("", "pub1", 10, [b2x(b"00000000000000000000")]))),
-            Commit("", b"00000000000000000002", message=str(TnxInfo("pub1", [b2x(b"00000000000000000000")], 0, "sign"))),
-        ]):
 
-        state = State({}, [], {}, None, None, None)
+    c1 = Commit("", b"00000000000000000000", message=str(TnxInfo("nothing", ["nothing"], {"pub1": 10}, 0, "sign")), parents=[])
+    c2 = Commit("", b"00000000000000000001", message=str(Block("header", "pub1", 10, [b2x(b"00000000000000000000")])), parents=[c1])
+    c3 = Commit("", b"00000000000000000002", message=str(TnxInfo("pub1", [b2x(b"00000000000000000000")], {"pub2": 10}, 0, "sign")), parents=[c2])
+    c4 = Commit("", b"00000000000000000003", message=str(TnxInfo("pub1", [b2x(b"00000000000000000001")], {"pub3": 10}, 0, "sign")), parents=[c3])
+    
+    with patch.object(Repo, "iter_commits", return_value=[c4, c3, c2, c1]): 
+        state = State({}, [], {}, Repo("."), None, None)
         init_chain(state)
 
-
     assert len(state.blocks) == 1
-    # TODO: test omre
+    assert len(state.tnxs) == 2
+    assert len(state.mempool) == 1
+
     
 
 def test_rebase_on_remotes_add_tnxs():
