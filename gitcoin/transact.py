@@ -38,51 +38,108 @@ def get_balance(self, state: State) -> int:
 
     return total_balance
 
-def make_transaction(self, state, dest_list, fee):
+# def make_transaction(self, state, dest_list, fee):
+#     '''
+#     state: form logic.py, State class
+#     dest_list: list of tuples, each tuple is of the form (reciever, amount)
+#     fee: cost for making transaction
+#     '''
+#     # Calculate the total amount to be sent
+#     total_amount = sum(amount for _, amount in dest_list)
+
+#     # Start with the transaction fee
+#     total_spent = fee  
+#     srcs = []  # Keep track of sources used in the transaction
+
+#     # Gather all previously used sources
+#     used_sources = set()
+#     for tnx in state.tnxs.values():
+#         used_sources.update(tnx.srcs)
+        
+#     # Validate that sufficient funds are available
+#     for dest_pubkey, amount in dest_list:
+#         if amount <= 0:
+#             raise ValueError(f"Transaction amount cannot be negative for destination {dest_pubkey}.")
+#         total_spent += amount
+    
+#     # Gather sources and check their availability
+#     sources_balance = self.get_balance(state)
+
+#     #Calculate how much the given person has
+#     for tnx_hash, tnx in state.tnxs.items():
+#         if tnx.pubkey == self.pubkey:  # Only consider transactions related to the sender
+#             srcs.extend(tnx.srcs)
+#             total_spent -= tnx.dests.get(self.pubkey, 0)
+
+#     # Check if any new sources appear again
+#     for source in srcs:
+#         if source in used_sources:
+#             raise ValueError(f"Source {source} has already been used in another transaction.")
+
+#     # If the total amount (+ fee) exceeds the balance, raise an error
+#     if total_spent > sources_balance:
+#         raise ValueError("Insufficient funds for the transaction.")
+    
+#     # Create a new transaction info object
+#     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
+#     tnx_info = TnxInfo(pubkey=self.pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
+
+#     # Create the transaction itself
+#     new_tnx_hash = 'some_hash_generation_logic'  # This should create a unique hash for the transaction
+#     new_tnx_prev_hash = 'some_previous_hash_logic'  # Logic to get the last transaction hash or previous state
+
+#     transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
+
+#     # Sign the transaction
+#     transaction.signature = transaction.sign(self, state.privkey)
+
+#     return transaction # Or return the transaction object if preferred
+def make_transaction(pubkey: str, privkey: str, state: State, dest_list: list[tuple[str, int]], fee: int, balance: int):
     '''
-    state: form logic.py, State class
-    dest_list: list of tuples, each tuple is of the form (reciever, amount)
-    fee: cost for making transaction
+    pubkey: The public key of the user (string)
+    privkey: The private key of the user (string)
+    state: from logic.py, State class
+    dest_list: list of tuples, each tuple is of the form (receiver, amount)
+    fee: cost for making the transaction
+    balance: Current balance of the user
     '''
+
     # Calculate the total amount to be sent
     total_amount = sum(amount for _, amount in dest_list)
 
     # Start with the transaction fee
-    total_spent = fee  
+    total_spent = fee
     srcs = []  # Keep track of sources used in the transaction
 
     # Gather all previously used sources
     used_sources = set()
     for tnx in state.tnxs.values():
         used_sources.update(tnx.srcs)
-        
+
     # Validate that sufficient funds are available
     for dest_pubkey, amount in dest_list:
         if amount <= 0:
             raise ValueError(f"Transaction amount cannot be negative for destination {dest_pubkey}.")
         total_spent += amount
-    
-    # Gather sources and check their availability
-    sources_balance = self.get_balance(state)
 
-    #Calculate how much the given person has
+    # Check if the balance is sufficient
+    if total_spent > balance:
+        raise ValueError("Insufficient funds for the transaction.")
+
+    # Calculate how much the given person has
     for tnx_hash, tnx in state.tnxs.items():
-        if tnx.pubkey == self.pubkey:  # Only consider transactions related to the sender
+        if tnx.pubkey == pubkey:  
             srcs.extend(tnx.srcs)
-            total_spent -= tnx.dests.get(self.pubkey, 0)
+            total_spent -= tnx.dests.get(pubkey, 0)
 
     # Check if any new sources appear again
     for source in srcs:
         if source in used_sources:
             raise ValueError(f"Source {source} has already been used in another transaction.")
 
-    # If the total amount (+ fee) exceeds the balance, raise an error
-    if total_spent > sources_balance:
-        raise ValueError("Insufficient funds for the transaction.")
-    
     # Create a new transaction info object
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
-    tnx_info = TnxInfo(pubkey=self.pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
+    tnx_info = TnxInfo(pubkey=pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
 
     # Create the transaction itself
     new_tnx_hash = 'some_hash_generation_logic'  # This should create a unique hash for the transaction
@@ -90,10 +147,10 @@ def make_transaction(self, state, dest_list, fee):
 
     transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
 
-    # Sign the transaction
-    transaction.signature = transaction.sign(self, state.privkey)
+    # Sign the transaction using the private key
+    transaction.signature = transaction.sign(privkey)
 
-    return transaction # Or return the transaction object if preferred
+    return transaction  # Or return the transaction object if preferred
 
 def get_balance(self, user):
     """Returns the balance of the user."""
