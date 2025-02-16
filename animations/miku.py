@@ -5,37 +5,50 @@ import math
 from time import sleep
 ASCII_CHARS = "@%#*+=-:. "
 
-def get_miku_text(): 
+ANIMATION_DIRS_AND_TIMES = {"mining" : [.5, True]} 
+TEXTS = {"mining" : "text/miningmsg.txt"}
+
+def get_frame():
+    pass 
+
+def animate(name):
+    assert name in ANIMATION_DIRS_AND_TIMES 
+    frames_src = os.listdir(name + "/") 
+    for i, frame_src in enumerate(frames_src):
+        frames_src[i] = name + "/" + frame_src
+        
+    frames_src.sort()
+
+    #determines
     text = []
-    file = open("mining/miningmsg.txt", "r")
-    for line in file:
-        text.append(line[:len(line)-1])
+    minus_line_space = 2
+    if name in TEXTS: 
+        text = get_text(TEXTS[name])
+        minus_line_space += len(text)
 
-    print(len(text)) 
-    file.close()
-    return text
-
-def animation(): 
-    srcs = [
-            "mining/IMG_20250215_181757.jpg",
-            "mining/IMG_20250215_181703.jpg",
-            "mining/IMG_20250215_181847.jpg"]
-    screen_size = get_screen_size_char()
-    imgs = read_photos(screen_size.lines - 6, screen_size.columns, srcs)
     frames = []
 
+    screen_size = get_screen_size_char()
+
+    #if we dont have space dont play video
+    if screen_size.lines - minus_line_space < 0:
+        return
+
+    imgs = read_photos(screen_size.lines - minus_line_space, screen_size.columns, frames_src)
     for img in imgs:
         frames.append(get_ascii_frame(img))
-    cur_frame = 0
-    dir = 1 
-    text = get_miku_text()
 
     for frame in frames:
         for line in text: 
             frame.append(line)
 
+    cur_frame = 0
+    dir = 1 
+    delay = ANIMATION_DIRS_AND_TIMES[name][0]
+    looping = ANIMATION_DIRS_AND_TIMES[name][1]
+
     while(True):
-        sleep(.5)
+        sleep(delay)
         print_frame(frames[cur_frame], screen_size.columns)
         cur_frame += dir 
 
@@ -44,9 +57,21 @@ def animation():
             dir = 1 
 
         if cur_frame >= 3:
-            cur_frame = 1
-            dir = -1 
+            if looping:
+                cur_frame = 1
+                dir = -1 
+            else:
+                cur_frame = 0
 
+def get_text(file_name): 
+    text = []
+    file = open(file_name, "r")
+    for line in file:
+        text.append(line[:len(line)-1])
+
+    print(len(text)) 
+    file.close()
+    return text
 
 def read_photos(height, width, paths: [str]):
     ret = []
@@ -67,7 +92,6 @@ def read_photo(height, width, path):
         img.append(row)
     i.show
     return img
-
 
 def get_screen_size_char():
     return os.get_terminal_size()
@@ -112,4 +136,4 @@ def clear_console():
         sys.stdout.write("\033c")
 
 if __name__ == '__main__': 
-    animation()
+    animate("mining")
