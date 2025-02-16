@@ -5,9 +5,18 @@ description = "Next-Gen crypocurrency developed by developers, for developers."
 keywords = ["git", "cryptocurrency", "blockchain"]
 authors = []
 dependencies = [
-    "colorist",
-    "gitpython",
-    "pytest"
+    "cffi==1.17.1",
+    "colorist==1.8.3",
+    "cryptography==44.0.1",
+    "gitdb==4.0.12",
+    "GitPython==3.1.44",
+    "iniconfig==2.0.0",
+    "packaging==24.2",
+    "pillow==11.1.0",
+    "pluggy==1.5.0",
+    "pycparser==2.22",
+    "pytest==8.3.4",
+    "smmap==5.0.2"
 ]
 
 [project.scripts]
