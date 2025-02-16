@@ -320,38 +320,22 @@ def rebase_on_remotes(s: State) -> list[str]:
 
 
 
+        tnx_hashes = []
+        block_hashes = []
         rs2 = RemoteState()
         for commit in s.repo.iter_commits(f"..{recent_common_commit}"):
-
-            if last_block is None:
-                if (bloc := Block.from_commit(commit)) is not None:
-                    last_block = bloc
-                else:
-                    rs2.mempool.append(TnxInfo.from_str(commit.message))
-                continue
-
             if (bloc := Block.from_commit(commit)) is not None:
-                last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
-                rs2.blocks[commit.hexsha] = last_block
-                last_block = bloc
-            
-            tnx_info = TnxInfo.from_str(commit.message)
-            tnx = Tnx(commit.hexsha, commit.parents[0].hexsha, tnx_info)
-            rs2.tnxs[commit.hexsha] = tnx
-            rs2.last_block.tnxs.append(tnx)
-
-        if last_block is not None:
-            rs2.blocks[last_block.hash] = last_block
+                block_hashes.append(bloc.hash)
+            else:
+                tnx_hashes.append(commit.hexsha)
 
         # if we have more blocks, we have to reset on that chain
-        if len(rs.blocks) > len(rs2.blocks):
+        if len(rs.blocks) > len(block_hashes):
             remote_latest_commit = next(s.repo.iter_commits(f"{remote.name}/main")).hash
             s.repo.reset("--hard", remote_latest_commit.hexsha)
 
             # remove everything in rs2 form s
-            for hash in rs2.tnxs.keys():
-                del s.tnxs[hash]
-            for hash in rs2.blocks.keys():
+            for hash in block_hashes: 
                 del s.blocks[hash]
 
             # add everything in rs to s
@@ -361,9 +345,11 @@ def rebase_on_remotes(s: State) -> list[str]:
                 s.blocks[hash] = tnx
 
             # try to add anything else we can add
-            for tnx in rs2.tnxs.values():
+            for hash in tnx_hashes:
                 if validate_tnxi(s, tnx):
                     commit_transaction(s, tnx)
+                else:
+                    del s.tnxs[hash]
 
         # otherwise put everything we can into mempool
         else:
