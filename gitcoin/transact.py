@@ -41,6 +41,7 @@ def init_transaction(state, dest_list: list[tuple[str, int]]):
 
 
 def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, init=False):
+    print(dest_list)
     '''
     pubkey: The public key of the user (string)
     privkey: The private key of the user (string)

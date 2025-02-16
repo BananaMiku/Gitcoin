@@ -27,8 +27,6 @@ def dest_and_amt_info(args):
 
     for i in range(len(args)):
         # even index = destinations
-        if i % 2 == 0 and not args[i].isalpha():
-            raise TypeError("Destination must be a string.")
         if i % 2 != 0 and not args[i].isdigit():
             print(args[i])
             #print(args[i])
@@ -111,10 +109,11 @@ def run():
         if len(payment_info) % 2 != 0:
             fee = payment_info.pop(-1)
 
+        dest_list = [[payment_info[i], int(payment_info[i+1])] for i in range(0, len(payment_info), 2)]
         if args.i:
-            init_transaction(state, [payment_info[i:i+2] for i in range(0, len(payment_info), 2)])
+            init_transaction(state, dest_list)
         else:
-            make_transaction(state, [payment_info[i:i+2] for i in range(0, len(payment_info), 2)], fee)
+            make_transaction(state, dest_list, fee)
 
 
     elif args.command == "remote":
