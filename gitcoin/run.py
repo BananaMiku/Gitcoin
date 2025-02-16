@@ -4,6 +4,8 @@ import json
 import os
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives import serialization
+from  gitcoin.animations.miku import task_and_animate
+from gitcoin.mining import mine
 
 from gitcoin.logic import make_keys, State
 from gitcoin.utils import pem_to_simple, simple_to_pem
@@ -112,7 +114,7 @@ def run():
             raise Exception("Invalid remote command")
 
     elif args.command == "mine":
-        print("Mining Gitcoin...")
+        task_and_animate("mining", mine, (state,), None)
 
     elif args.command == "observer":
         print("Observer placeholder")

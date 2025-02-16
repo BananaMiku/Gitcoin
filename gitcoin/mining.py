@@ -1,7 +1,7 @@
 from datetime import datetime
 from threading import Thread
-from logic import State, rebase_on_remotes
-from hashing_utils import mine_block
+from gitcoin.logic import State, rebase_on_remotes
+from gitcoin.hashing_utils import mine_block
 
 def mine(state: State):
     """Mines a block while pulling from remotes.

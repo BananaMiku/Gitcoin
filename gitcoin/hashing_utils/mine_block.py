@@ -2,7 +2,7 @@ import os
 import subprocess
 import zlib
 import hashlib
-import mine_cpu
+from gitcoin.hashing_utils import mine_cpu
 
 def mine(search_limit):
     """ Tries to mine a block and pushes it to the current branch.
@@ -26,7 +26,6 @@ def mine(search_limit):
 
     solution = mine_cpu.mine(commit_block, search_limit)
     if solution == None:
-        print('Failed!')
         return False
     
     solution_hash = hashlib.sha1(solution).hexdigest()
