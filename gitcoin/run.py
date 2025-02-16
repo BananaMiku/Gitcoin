@@ -20,6 +20,7 @@ def dest_and_amt_info(args):
             raise TypeError("Destination must be a string.")
         if i % 2 != 0 and not args[i].isdigit():
             print(args[i])
+            #print(args[i])
             raise TypeError("Amount must be an integer.")
 
     return args

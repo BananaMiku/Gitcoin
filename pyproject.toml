@@ -1,6 +1,12 @@
 [project]
 name = "gitcoin"
 version = "1.0"
+description = "Next-Gen crypocurrency developed by developers, for developers."
+keywords = ["git", "cryptocurrency", "blockchain"]
+authors = []
+dependencies = [
+    
+]
 
 [project.scripts]
 gitcoin = "gitcoin.run:run"
