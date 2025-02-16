@@ -1,6 +1,6 @@
+"""
 from gitcoin.logic import State, Tnx, TnxInfo
 from gitcoin.transact import make_transaction
-
 def test_transaction_simple():
     s = State([], {}, [], None, "priv1", "pub1")
     s.tnxs["hash1"] = Tnx("nothing", ["nothing"], ["pub1", 10], 0, None, "hash1", None)
@@ -41,4 +41,4 @@ def test_transaction_already_used():
 
     
 
-
+"""

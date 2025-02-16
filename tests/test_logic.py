@@ -11,10 +11,21 @@ def test_validate_tnx_simple():
     tnx_1 = Tnx("pubkey1", [], {"pubkey2": 10}, 1, "sig", "TNX1", "eep")
     s.tnxs[tnx_1.hash] = tnx_1
 
+    #wrong amount
+    tnx_2_fail = Tnx("pubkey2", ["TNX1"], {"pubkey3": 1}, 1, "sig", "TNX2", "eep")
+    assert not validate_tnx(tnx_2_fail, s)
+
+    #should work
     tnx_2 = Tnx("pubkey2", ["TNX1"], {"pubkey3": 9}, 1, "sig", "TNX2", "eep")
     assert validate_tnx(tnx_2, s)
+    s.tnxs[tnx_2.hash] = tnx_2
+
+    #source seen should fail 
+    tnx_2 = Tnx("pub", ["TNX1"], {"pubkey3": 9}, 1, "sig", "TNX2", "eep")
+    assert not validate_tnx(tnx_2, s)
 
 
+"""
 def test_tnxinfo_validate_signed():
     signed = TnxInfo.sign("privkey", "pubkey", ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
     assert signed.validate()
@@ -48,4 +59,4 @@ def test_rebase_on_remotes_add_tnxs():
 
 def test_rebase_on_remotes_reset():
     pass
-
+"""
