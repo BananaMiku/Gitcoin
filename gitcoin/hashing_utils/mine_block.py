@@ -14,9 +14,10 @@ def mine(search_limit, state: State):
     """
 
     repo = state.repo
+    worth = sum(map(lambda a: a.mining_fee, state.mempool)) + 10
 
     old_commit_hash = repo.head.commit.hexsha
-    default_commit_message = f'{state.pubkey}\n\n00000000000000000000000000000000'
+    default_commit_message = f'{worth} {state.pubkey}\n\n000000000000000000000000000000000'
 
     try:
         repo.git.commit('--allow-empty', '-m', default_commit_message, '--no-gpg-sign', '-q')

@@ -16,5 +16,7 @@ def mine(state: State):
             last_rebase_time = datetime.now()
             thread = Thread(target=rebase_on_remotes, args=state)
             thread.start()
-    state.repo.git.push()
+
+    if len(state.repo.remotes):
+        state.repo.git.push()
 

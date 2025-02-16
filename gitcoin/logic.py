@@ -54,7 +54,7 @@ class TnxInfo:
 
     @staticmethod
     def from_str(s: str):
-        tnx_match = match_transaction(s)
+        tnx_match = re.match(r"(\S+)\n\n((?:\S+\n)*)((?:\d+ \S+\n)*(?:\d+ \S+))\n(\d)\n(\S+)", s)
         if tnx_match is None or len(tnx_match.groups()) != 5:
             return None
 
@@ -127,7 +127,7 @@ class Block:
 
     @staticmethod
     def from_commit(commit):
-        match = re.match(r"(\d+) (\w+)\n\n\w+", commit.message)
+        match = re.match(r"(\d+) (.+)\n\n.+", commit.message)
         if match is None:
             return None
 
@@ -229,13 +229,13 @@ def init_chain(state: State):
     if not state.repo.heads:
         return
 
+
     state.tnxs = {}
     state.mempool = []
     state.blocks = {}
 
     last_block = None
     for commit in state.repo.iter_commits():
-
         if last_block is None:
 
             if (bloc := Block.from_commit(commit)) is not None:
@@ -248,14 +248,20 @@ def init_chain(state: State):
 
         assert len(commit.parents) <= 1 # you can have multiple parents in a merge, we should never have a merge
     
+        
         # if we're a block, ignore
         if (bloc := Block.from_commit(commit)) is not None:
             last_block.worth = sum(map(lambda a: a.mining_fee, last_block.tnxs))
             state.blocks[commit.hexsha] = last_block
             last_block = bloc
+            continue
 
         tnx_info = TnxInfo.from_str(commit.message)
-        tnx = Tnx.from_info(commit.hexsha, commit.parents[0].hexsha, tnx_info)
+        if len(commit.parents):
+            tnx = Tnx.from_info(commit.hexsha, commit.parents[0].hexsha, tnx_info)
+        else:
+            tnx = Tnx.from_info(commit.hexsha, None, tnx_info)
+            
         state.tnxs[tnx.hash] = tnx
         last_block.tnxs.append(tnx)
 
@@ -265,10 +271,10 @@ def init_chain(state: State):
 
 
 def match_block(s: str) -> re.Match:
-    return re.match(r"(\w+)\n\n(\w+)", s)
+    return re.match(r"(.+)\n\n(.+)", s)
 
 def match_transaction(s: str) -> re.Match:
-    return re.match(r"(\w+)\n\n((?:\w+\n)+)((?:(?:\d+ \w+\n)*(?:\d+ \w+))\n|())(\d)\n(\w+)", s)
+    return re.match(r"(.+)\n\n((?:.+\n)+)((?:(?:\d+ .+\n)*(?:\d+ .+))\n|())(\d)\n(.+)", s)
 
 
 def append_block(s: State, header: str):

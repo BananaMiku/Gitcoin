@@ -70,20 +70,28 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, i
 
     # Calculate how much the given person has
     for hash, tnx in state.tnxs.items():
-        for tnx_ in tnx.dests:
-            if tnx_[0] == state.pubkey:
+        if total_spent <= 0: break
+
+        for pubkey, money in tnx.dests.items():
+            if pubkey == state.pubkey:
                 bad = False
                 for hash_temp, tnx_temp in state.tnxs.items():
                     if hash in tnx_temp.srcs:
                         bad = True
                         break
-                if bad:
-                    continue
+
+                if bad: continue
 
                 srcs.append(hash)
-                total_spent -= tnx_[1]
+                total_spent -= money
+
+                if total_spent <= 0: break
+
+                    
 
     for hash, block in state.blocks.items():
+        if total_spent <= 0: break
+
         if block.owner==state.pubkey:
             bad = False
             for hash_temp, tnx_temp in state.tnxs.items():
@@ -92,12 +100,19 @@ def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int, i
                     break
             if bad:
                 continue
+
             srcs.append(hash)
             total_spent -= block.worth
+
+            if total_spent <= 0: break
 
     # Create a new transaction info object
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
     if total_spent > 0:
+        print(srcs)
+        print(total_spent)
+        # print(srcs, dest_dict)
+        # print(state)
         raise ValueError(f"Total Spent should not be positive.")
     if total_spent < 0:
         dest_dict[state.pubkey] = -total_spent
