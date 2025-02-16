@@ -12,9 +12,6 @@ G = 3  # Generator
 N = 2**64 - 59  # Large prime modulus (can be adjusted)
 
 
-def make_keys():
-    pass
-
 class User:
     def __init__(self, user_id):
         self.user_id = user_id
@@ -94,7 +91,7 @@ def get_balance(self, state: State) -> int:
 #     transaction.signature = transaction.sign(self, state.privkey)
 
 #     return transaction # Or return the transaction object if preferred
-def make_transaction(pubkey: str, privkey: str, state: State, dest_list: list[tuple[str, int]], fee: int, balance: int):
+def make_transaction(state: State, dest_list: list[tuple[str, int]], fee: int):
     '''
     pubkey: The public key of the user (string)
     privkey: The private key of the user (string)
@@ -123,14 +120,14 @@ def make_transaction(pubkey: str, privkey: str, state: State, dest_list: list[tu
         total_spent += amount
 
     # Check if the balance is sufficient
-    if total_spent > balance:
-        raise ValueError("Insufficient funds for the transaction.")
+    # if total_spent > balance:
+        # raise ValueError("Insufficient funds for the transaction.")
 
     # Calculate how much the given person has
     for tnx_hash, tnx in state.tnxs.items():
-        if tnx.pubkey == pubkey:  
+        if tnx.pubkey == state.pubkey:  
             srcs.extend(tnx.srcs)
-            total_spent -= tnx.dests.get(pubkey, 0)
+            total_spent -= tnx.dests.get(state.pubkey, 0)
 
     # Check if any new sources appear again
     for source in srcs:
@@ -139,18 +136,8 @@ def make_transaction(pubkey: str, privkey: str, state: State, dest_list: list[tu
 
     # Create a new transaction info object
     dest_dict = {dest_pubkey: amount for dest_pubkey, amount in dest_list}
-    tnx_info = TnxInfo(pubkey=pubkey, srcs=srcs, dests=dest_dict, mining_fee=fee, signature='')
 
-    # Create the transaction itself
-    new_tnx_hash = 'some_hash_generation_logic'  # This should create a unique hash for the transaction
-    new_tnx_prev_hash = 'some_previous_hash_logic'  # Logic to get the last transaction hash or previous state
-
-    transaction = Tnx.from_info(new_tnx_hash, new_tnx_prev_hash, tnx_info)
-
-    # Sign the transaction using the private key
-    transaction.signature = transaction.sign(privkey)
-
-    return transaction  # Or return the transaction object if preferred
+    return TnxInfo.sign(state.privkey, state.pubkey, srcs, dest_dict, fee)
 
 def get_balance(self, user):
     """Returns the balance of the user."""

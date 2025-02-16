@@ -4,6 +4,29 @@ from git import Repo, Commit
 from git.util import bin_to_hex
 b2x=lambda b: bin_to_hex(b).decode("ascii")
 
+priv = """-----BEGIN PRIVATE KEY-----
+MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBALhfts/SuoD6fv+p
+azNRZC0RJUE999QUWEFDfuJXZKx+e2k4hQ76pSuw5d9rkQXR43VSoSPGv9Yu7bE5
+8jPs2i/BJ6VVeW5pOvaLnjh8Iah+25uOID/2UEseij077KBYWy8GRoxmOZyh4zkW
+hJEzmV8STA1JGR1NIafDzteKHKwNAgMBAAECgYALIRvz55CCgJxx6lQiQON/JO3O
+xmLTVncNWXmrSAM3tlrUuyitAsw9muwFVIToiQbl6hr4AeNKloKalBjesYlqBjIJ
+MPFrhbT51enQuvjeKkm5tXt//FXl7beAxBnVAUN6R5b/ssAD8wbiF+rcP63lMQTY
+2CTP3wDnhoA4c6KiAQJBAO7hJLBAAYU6bfzi0sVZp0ap2qQV14UWMsQBdBZG9JGY
+rixy1UrcRHYARldNFPmPRUALzr36EzU370FlLDWaqeECQQDFloaqO3dND9XEE8CE
+uGZ7wrVRPhUapmfYPdF0r7HJ1bAFfU5rXfI/YChn7GimGVEGqkBKj6MViH1FmZ+w
++b+tAkEAwmhIy4fLtPmQeba/gg0srb2eStvbwlwGhK4KI/crIzL2zQXHwFzy+nXO
+yU3aPB/1Y+I4JzRWXYFgHgCQsi9lAQJBAINOJO+71OxBOa2z8pxAbtqP6i6zMxMi
+wp/RdQA2Qc//UZpUS2jOZc33+OIXGPRInq/vNApYqegFbDp0fMr/LYECQFOW09JB
+1ddTvlpU4zyV8S1dM8lIQseyXcu5RAzmrJmkuStwhmUqU8tlPBazGRm/eGH2eMSA
+a3Mb1kV9zd2d7Is=
+-----END PRIVATE KEY-----"""
+pub = """-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4X7bP0rqA+n7/qWszUWQtESVB
+PffUFFhBQ37iV2SsfntpOIUO+qUrsOXfa5EF0eN1UqEjxr/WLu2xOfIz7NovwSel
+VXluaTr2i544fCGoftubjiA/9lBLHoo9O+ygWFsvBkaMZjmcoeM5FoSRM5lfEkwN
+SRkdTSGnw87XihysDQIDAQAB
+-----END PUBLIC KEY-----"""
+
 
 def test_validate_tnx_simple():
     s = State({}, [], None, None, None, None)
@@ -25,10 +48,11 @@ def test_validate_tnx_simple():
     assert not validate_tnx(tnx_2, s)
 
 
-"""
 def test_tnxinfo_validate_signed():
-    signed = TnxInfo.sign("b2313d6d", "65a7ddd982a132bf", ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
+    signed = TnxInfo.sign(priv, pub, ["src1", "src2"], {"dest1": 5, "dest2": 10}, 15)
+    print(signed.signature)
     assert signed.validate()
+    assert False
 
 
 def test_tnxinfo_serialize_deserialize():
@@ -61,4 +85,3 @@ def test_rebase_on_remotes_add_tnxs():
 
 def test_rebase_on_remotes_reset():
     pass
-"""

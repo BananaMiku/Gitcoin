@@ -1,6 +1,6 @@
 import argparse
 import subprocess
-from gitcoin.transact import make_keys
+from gitcoin.logic import make_keys
 
 # only integer transactions are allowed
 
@@ -113,7 +113,7 @@ def run():
             print(f"setting private key {args.privkey}")
         if args.keypair_action == "generate":
             [priv, pub] = make_keys()
-            print(f"keys:\nprivate {priv}\npublic: {pub}\n\nthese are saved")
+            print(f"keys:\{priv}\n{pub}\n\nthese are saved")
     
 
 

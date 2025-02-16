@@ -1,11 +1,37 @@
 from dataclasses import dataclass, field
 from git import Repo, Commit
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 import re
-from ecdsa import VerifyingKey, SECP256k1, SigningKey
-from ecdsa.util import string_to_number
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
+
+def make_keys():
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=1024
+    )
+
+    public_key = private_key.public_key()
+
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+
+    # Serialize the public key to PEM format (bytes) and then decode to a string
+    public_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+    return [private_pem.decode(), public_pem.decode()]
+
+
+def _construct_message(pubkey, srcs, dests, fee):
+    srcs_str = '\n'.join(srcs)
+    dests_str = '\n'.join(map(lambda a: f"{a[1]} {a[0]}", dests.items()))
+    return f"{pubkey}\n\n{srcs_str}\n{dests_str}\n{fee}".encode()
 
 @dataclass
 class TnxInfo:
@@ -41,41 +67,36 @@ class TnxInfo:
         """Sign the transaction using the private key."""
         
         # Create a string to sign that includes relevant transaction details
-        data_to_sign = f"{pubkey}{srcs}{dests}{fee}".encode()
+        signature = load_pem_private_key(privkey.encode(), None).sign(
+            _construct_message(pubkey, srcs, dests, fee),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
 
-        privkey_bytes = bytes.fromhex(privkey)  # Convert the hex private key to bytes
-        signing_key = SigningKey.from_string(privkey_bytes, curve=SECP256k1)
+        return TnxInfo(pubkey, srcs, dests, fee, signature.hex())
 
-        # Generate the Schnorr signature
-        signature = signing_key.sign(data)
 
-        return TnxInfo(pubkey, srcs, dests, fee, signature)
+    def validate(self):
+        try:
+            load_pem_public_key(self.pubkey.encode()).verify(
+                bytes.fromhex(self.signature),
+                _construct_message(self.pubkey, self.srcs, self.dests, self.mining_fee),
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
 
-    def validate(self, strToBeValidated: str):
-        # validate signature
-        # Create a VerifyingKey object from the public key
-        pubkey_bytes = bytes.fromhex(self.pubkey)  # Convert the hex public key to bytes
-        verifying_key = VerifyingKey.from_string(pubkey_bytes, curve=SECP256k1)
-
-        try: 
-            is_valid = verifying_key.verify(bytes.fromhex(self.signature), strToBeValidated)
-            return is_valid  # Return True if the signature is valid
         except Exception as e:
-            print(f"Signature verification failed: {e}")
-            return False  # Return False if verification fails or an error occurs
+            print(e)
+            return False
 
-    def _generate_signature(self, data: bytes, privkey: str) -> bytes:
-        """
-        Generate a Schnorr signature for the given data using the provided private key.
+        return True
         
-        :param data: The data to sign as bytes.
-        :param privkey: The private key as a hexadecimal string.
-        :return: The Schnorr signature as bytes.
-        """
-        key = RSA.import_key(privkey)
-        h = SHA256.new(data)
-        return pkcs1_15.new(key).sign(h)
-
 
     def __str__(self):
         srcs_str = '\n'.join(self.srcs)
