@@ -1,5 +1,9 @@
 # GitCoin
 2025 HackHer
+
+# Packages
+* To install all packages necessary: `pip install -r requirements.txt`
+
 # Testing
 * Running tests for transactions (from ./Gitcoin directory):
     * `pytest -k test_transaction_simple`

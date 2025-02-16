@@ -1,0 +1,13 @@
+cffi==1.17.1
+colorist==1.8.3
+cryptography==44.0.1
+-e git+https://github.com/PianoPanda/GitCoin.git@694d5b3aab7740c04ba17234b54d39d5869f16da#egg=gitcoin
+gitdb==4.0.12
+GitPython==3.1.44
+iniconfig==2.0.0
+packaging==24.2
+pillow==11.1.0
+pluggy==1.5.0
+pycparser==2.22
+pytest==8.3.4
+smmap==5.0.2
