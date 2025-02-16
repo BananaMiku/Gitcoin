@@ -82,8 +82,9 @@ def test_init_chain(git_repo):
     c3 = Commit("", b"00000000000000000002", message=str(TnxInfo("pub1", [b2x(b"00000000000000000000")], {"pub2": 10}, 0, "sign")), parents=[c2])
     c4 = Commit("", b"00000000000000000003", message=str(TnxInfo("pub1", [b2x(b"00000000000000000001")], {"pub3": 10}, 0, "sign")), parents=[c3])
     
-    state = State({}, [], {}, git_repo, None, None)
-    init_chain(state)
+    with patch.object(Repo, "iter_commits", return_value=[c4, c3, c2, c1]): 
+        state = State({}, [], {}, Repo("."), None, None)
+        init_chain(state)
 
     assert len(state.blocks) == 1
     assert len(state.tnxs) == 2
