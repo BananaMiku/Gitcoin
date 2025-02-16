@@ -29,7 +29,6 @@ def dest_and_amt_info(args):
     for i in range(len(args)):
         # even index = destinations
         if i % 2 != 0 and not args[i].isdigit():
-            print(args[i])
             #print(args[i])
             raise TypeError("Amount must be an integer.")
 
@@ -153,7 +152,7 @@ def run():
 
             print(f"setting private key as follows\n{privkey_pem}")
             state.privkey = pem_to_simple(privkey_pem)
-            state.pubkey = pem_to_simple(pubkey_pem)
+            state.pubkey = pem_to_simple(public_pem)
             
         if args.keypair_action == "gen":
             if state.privkey and state.pubkey:

@@ -95,6 +95,3 @@ def test_transaction_nightmare():
 
 
 
-
-    
-
