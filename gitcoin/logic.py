@@ -150,7 +150,7 @@ class State:
     tnxs: dict[str, Tnx] = field(default_factory=dict)
     mempool: list[TnxInfo] = field(default_factory=list)
     blocks: dict[str, Block] = field(default_factory=dict)
-    repo: Repo = field(default_factory=lambda: Repo("."))
+    repo: Repo = None
     repo_location: str = ""
     pubkey: str = ""
     privkey: str = ""

@@ -39,6 +39,8 @@ def dest_and_amt_info(args):
 def run():
     state = State()
     load_state(state) # try to get stuff from state
+    if state.repo_location:
+        state.repo = Repo(state.repo_location)
     
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", help="sub-command help")
@@ -93,7 +95,6 @@ def run():
     args = parser.parse_args()
 
     # no input, print help message
-    print(vars(args))
     if args.command is None:
         parser.print_help()
 
